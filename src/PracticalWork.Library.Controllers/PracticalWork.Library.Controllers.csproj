@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Asp.Versioning.Mvc" />
+    <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" />
+    <PackageReference Include="FluentValidation.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PracticalWork.Library.Contracts\PracticalWork.Library.Contracts.csproj" />
+    <ProjectReference Include="..\PracticalWork.Library\PracticalWork.Library.csproj" />
+  </ItemGroup>
+</Project>

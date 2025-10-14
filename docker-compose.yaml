@@ -1,0 +1,20 @@
+services:
+  # PostgreSQL database
+  # Заполнить 
+
+  # Redis cache
+  # Заполнить 
+
+  # MinIO file storage
+  # Заполнить 
+
+  # pgAdmin for database management
+  # Заполнить 
+
+  # Redis Commander for Redis management
+  # Заполнить 
+
+volumes:
+ postgres_data:
+ redis_data:
+ minio_data:

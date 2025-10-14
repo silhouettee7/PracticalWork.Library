@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>..\..</DockerfileContext>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Update="appsettings.Development.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="appsettings.json" />
+    <AdditionalFiles Include="appsettings.Development.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PracticalWork.Library.Cache.Redis\PracticalWork.Library.Cache.Redis.csproj" />
+    <ProjectReference Include="..\PracticalWork.Library.Controllers\PracticalWork.Library.Controllers.csproj" />
+    <ProjectReference Include="..\PracticalWork.Library.Data.Minio\PracticalWork.Library.Data.Minio.csproj" />
+    <ProjectReference Include="..\PracticalWork.Library.Data.PostgreSql\PracticalWork.Library.Data.PostgreSql.csproj" />
+    <ProjectReference Include="..\PracticalWork.Library\PracticalWork.Library.csproj" />
+  </ItemGroup>
+
+</Project>
