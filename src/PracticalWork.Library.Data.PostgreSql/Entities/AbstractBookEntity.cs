@@ -26,8 +26,6 @@ public abstract class AbstractBookEntity : EntityBase
     /// <summary>Путь к изображению обложки</summary>
     public string CoverImagePath { get; set; }
 
-    /// <summary>
-    /// Записи о выдачи книги
-    /// </summary>
+    /// <summary>Записи о выдачи книги</summary>
     public ICollection<BookBorrowEntity> IssuanceRecords { get; set; }
 }

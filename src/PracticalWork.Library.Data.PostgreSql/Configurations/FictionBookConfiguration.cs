@@ -2,7 +2,4 @@
 
 namespace PracticalWork.Library.Data.PostgreSql.Configurations;
 
-internal sealed class FictionBookConfiguration : EntityConfigurationBase<FictionBookEntity>
-{
-
-}
+internal sealed class FictionBookConfiguration : EntityConfigurationBase<FictionBookEntity>;

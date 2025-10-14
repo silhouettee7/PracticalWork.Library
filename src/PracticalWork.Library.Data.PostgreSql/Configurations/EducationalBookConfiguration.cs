@@ -2,6 +2,4 @@
 
 namespace PracticalWork.Library.Data.PostgreSql.Configurations;
 
-internal sealed class EducationalBookConfiguration : EntityConfigurationBase<EducationalBookEntity>
-{
-}
+internal sealed class EducationalBookConfiguration : EntityConfigurationBase<EducationalBookEntity>;
