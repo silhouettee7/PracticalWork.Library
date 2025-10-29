@@ -5,8 +5,9 @@ namespace PracticalWork.Library.Models;
 /// <summary>
 /// Книга
 /// </summary>
-public sealed class Book
+public sealed class Book: IModel
 {
+    public Guid Id { get; set; }
     /// <summary>Название книги</summary>
     public string Title { get; set; }
 
@@ -56,5 +57,13 @@ public sealed class Book
     {
         Description = description;
         CoverImagePath = coverImagePath;
+    }
+
+    public void Update(string title, string description, int year, IReadOnlyList<string> authors)
+    {
+        Title = title;
+        Description = description;
+        Year = year;
+        Authors = authors;
     }
 }

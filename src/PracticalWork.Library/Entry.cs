@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using PracticalWork.Library.Abstractions.Services;
+using PracticalWork.Library.Models;
 using PracticalWork.Library.Services;
 
 namespace PracticalWork.Library;
@@ -12,7 +13,7 @@ public static class Entry
     public static IServiceCollection AddDomain(this IServiceCollection services)
     {
         services.AddScoped<IBookService, BookService>();
-
+        services.AddScoped<ICursorPaginationService<Book>, CursorPaginationService<Book>>();
         return services;
     }
 }

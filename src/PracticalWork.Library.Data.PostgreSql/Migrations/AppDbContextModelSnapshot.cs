@@ -32,6 +32,9 @@ namespace PracticalWork.Library.Data.PostgreSql.Migrations
                         .IsRequired()
                         .HasColumnType("text[]");
 
+                    b.Property<int>("Category")
+                        .HasColumnType("integer");
+
                     b.Property<string>("CoverImagePath")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
