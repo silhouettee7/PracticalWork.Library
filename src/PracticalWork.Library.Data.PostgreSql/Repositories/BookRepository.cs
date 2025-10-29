@@ -32,6 +32,8 @@ public sealed class BookRepository : IBookRepository
         entity.Authors = book.Authors;
         entity.Status = book.Status;
         entity.Category = book.Category;
+        entity.CreatedAt = DateTime.UtcNow;
+        entity.UpdatedAt = DateTime.UtcNow;
         
         _appDbContext.Add(entity);
         await _appDbContext.SaveChangesAsync();
@@ -43,28 +45,18 @@ public sealed class BookRepository : IBookRepository
     {
         var bookEntity = await _appDbContext.Books
             .SingleOrDefaultAsync(b => b.Id == id);
-        return new Book
-        {
-            Id = bookEntity.Id,
-            Authors = bookEntity.Authors,
-            Description = bookEntity.Description,
-            CoverImagePath = bookEntity.CoverImagePath,
-            Status = bookEntity.Status,
-            Title = bookEntity.Title,
-            Year = bookEntity.Year,
-            IsArchived = bookEntity.Status == BookStatus.Archived,
-            Category = bookEntity.Category,
-        };
+        return bookEntity.ToBook();
     }
 
-    public async Task UpdateBook(Book book)
+    public async Task UpdateBook(Guid id, Book book)
     {
-        var entity = await _appDbContext.Books.FindAsync(book.Id) ?? throw new Exception("Не удалось найти книгу в базе данных");
+        var entity = await _appDbContext.Books.FindAsync(id);
         entity.Title = book.Title;
         entity.Description = book.Description;
         entity.Year = book.Year;
         entity.Authors = book.Authors;
         entity.Status = book.Status;
+        entity.UpdatedAt = DateTime.UtcNow;
         if (book.CoverImagePath != null)
         {
             entity.CoverImagePath = book.CoverImagePath;
@@ -86,18 +78,7 @@ public sealed class BookRepository : IBookRepository
         var entities = query
             .Where(b => b.Status == status && b.Authors.Contains(author))
             .CursorPage(request)
-            .Select(e => new Book
-            {
-                Id = e.Id,
-                Authors = e.Authors,
-                Category = e.Category,
-                CoverImagePath = e.CoverImagePath,
-                Description = e.Description,
-                Status = e.Status,
-                Title = e.Title,
-                Year = e.Year,
-                IsArchived = e.Status == BookStatus.Archived
-            });
+            .Select(e => e.ToBook());
         
         return await entities.ToListAsync();
     }

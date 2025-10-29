@@ -1,12 +1,10 @@
 using System.Text;
 using PracticalWork.Library.Abstractions.Services;
-using PracticalWork.Library.Abstractions.Storage;
-using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.Services;
 
-public class CursorPaginationService<TModel>: ICursorPaginationService<TModel>  where TModel : IModel
+public class CursorPaginationService<TModel>: ICursorPaginationService<TModel>  where TModel : ICursor
 {
     public CursorPaginationResponse<TModel> ToCursorPageResponse(IReadOnlyList<TModel> page, CursorPaginationRequest request)
     {
@@ -28,7 +26,7 @@ public class CursorPaginationService<TModel>: ICursorPaginationService<TModel>  
                 response.PreviousCursor = request.Cursor;
             }
             response.HasNext = additionalElem is not null;
-            response.NextCursor = response.HasNext ? EncodeCursor(additionalElem!.Id) : null;
+            response.NextCursor = response.HasNext ? EncodeCursor(additionalElem!.Cursor) : null;
         }
         else
         {
@@ -38,14 +36,14 @@ public class CursorPaginationService<TModel>: ICursorPaginationService<TModel>  
                 response.NextCursor = request.Cursor;
             }
             response.HasPrevious = additionalElem is not null;
-            response.PreviousCursor = response.HasPrevious ? EncodeCursor(additionalElem!.Id) : null;
+            response.PreviousCursor = response.HasPrevious ? EncodeCursor(additionalElem!.Cursor) : null;
         }
 
         return response;
     }
-    private string EncodeCursor(Guid cursor)
+    private string EncodeCursor(Cursor cursor)
     {
-        return Convert.ToBase64String(Encoding.UTF8.GetBytes(cursor.ToString()));
+        return Convert.ToBase64String(Encoding.UTF8.GetBytes(cursor.Id.ToString()));
     }
 
 }

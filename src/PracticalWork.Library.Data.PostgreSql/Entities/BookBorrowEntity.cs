@@ -25,4 +25,6 @@ public sealed class BookBorrowEntity : EntityBase
 
     /// <summary>Статус книги в библиотеке</summary>
     public BookIssueStatus Status { get; set; }
+
+    public AbstractBookEntity Book { get; set; }
 }

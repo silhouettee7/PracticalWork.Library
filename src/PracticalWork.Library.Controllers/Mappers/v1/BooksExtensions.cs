@@ -2,6 +2,7 @@
 using PracticalWork.Library.Contracts.v1.Books.Response;
 using PracticalWork.Library.Enums;
 using PracticalWork.Library.Models;
+using BookIssueStatus = PracticalWork.Library.Contracts.v1.Enums.BookIssueStatus;
 using BookStatus = PracticalWork.Library.Contracts.v1.Enums.BookStatus;
 
 namespace PracticalWork.Library.Controllers.Mappers.v1;
@@ -30,10 +31,10 @@ public static class BooksExtensions
     public static ArchiveBookResponse ToArchiveBookResponse(this BookArchive book) =>
         new(book.Id, book.Title, book.ArchivedAt);
     
-    public static BookDetailsResponse ToBookDetailsResponse(this Book book) =>
-        new BookDetailsResponse(book.Id, book.Title, (Contracts.v1.Enums.BookCategory)book.Category, book.Authors, book.Description, book.Year, book.CoverImagePath, (BookStatus)book.Status, book.IsArchived);
+    public static BookResponse ToBookDetailsResponse(this Book book) =>
+        new BookResponse(book.Title, (Contracts.v1.Enums.BookCategory)book.Category, book.Authors, book.Description, book.Year, (BookStatus)book.Status, book.IsArchived);
     public static CursorPaginationRequest ToCursorPaginationRequest(this BookCursorPaginationRequest request) =>
-        new CursorPaginationRequest
+        new()
         {
             Cursor = request.Cursor,
             Forward = request.Forward,
@@ -41,9 +42,21 @@ public static class BooksExtensions
         };
     
     public static BookCursorPaginationResponse ToBookCursorPaginationResponse(this CursorPaginationResponse<Book> response) =>
-        new BookCursorPaginationResponse(
+        new (
             response.Items
                 .Select(b => b.ToBookDetailsResponse())
                 .ToList(), 
             response.NextCursor, response.PreviousCursor, response.HasNext, response.HasPrevious);
+
+    public static BorrowedBookResponse ToBorrowedBookResponse(this BorrowedBook book) =>
+        new (
+            book.Title, 
+            (Contracts.v1.Enums.BookCategory)book.Category, 
+            book.Authors,
+            book.Description, 
+            book.Year, 
+            (BookIssueStatus)book.Status, 
+            book.DueDate, 
+            book.ReturnDate, 
+            book.BorrowDate);
 }

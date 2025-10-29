@@ -46,7 +46,7 @@ public sealed class BookService : IBookService
     {
         try
         {
-            var book = await _bookRepository.GetBook(id) ?? throw new BookNotFoundException("Книга не найдена");
+            var book = await _bookRepository.GetBook(id);
             if (book.IsArchived)
             {
                 throw new BookServiceException("Книга в архиве");
@@ -54,8 +54,16 @@ public sealed class BookService : IBookService
 
             book.Update(updatedBook.Title, updatedBook.Description,
                 updatedBook.Year, updatedBook.Authors);
-            await _bookRepository.UpdateBook(book);
+            await _bookRepository.UpdateBook(id, book);
             await IncrementCacheVersion();
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new ReaderServiceException("Обнаружены не уникальные книги", ex);
+        }
+        catch (NullReferenceException ex)
+        {
+            throw new ReaderServiceException("Книга не обнаружена", ex);
         }
         catch (Exception ex)
         {
@@ -67,9 +75,9 @@ public sealed class BookService : IBookService
     {
         try
         {
-            var book = await _bookRepository.GetBook(id) ?? throw new BookNotFoundException("Книга не найдена");
+            var book = await _bookRepository.GetBook(id);
             book.Archive();
-            await _bookRepository.UpdateBook(book);
+            await _bookRepository.UpdateBook(id, book);
             await IncrementCacheVersion();
             var response = new BookArchive
             {
@@ -79,6 +87,14 @@ public sealed class BookService : IBookService
             };
             return response;
         }
+        catch (InvalidOperationException ex)
+        {
+            throw new ReaderServiceException("Обнаружены не уникальные книги", ex);
+        }
+        catch (NullReferenceException ex)
+        {
+            throw new ReaderServiceException("Книга не обнаружена", ex);
+        }
         catch (Exception ex)
         {
             throw new BookServiceException("Не удалось заархивировать книгу", ex);
@@ -87,36 +103,51 @@ public sealed class BookService : IBookService
 
     public async Task<CursorPaginationResponse<Book>> GetBooksPage(CursorPaginationRequest request, BookStatus status, BookCategory category, string author)
     {
-        var cacheVersion = await GetCurrentCacheVersion();
-        var cacheKey = GenerateBooksPageCacheKey(request, status, category, author, cacheVersion);
-        var cachedResult = await _cacheService.GetAsync<CursorPaginationResponse<Book>>(cacheKey);
-        if (cachedResult != null)
+        try
         {
-            return cachedResult;
+            var cacheVersion = await GetCurrentCacheVersion();
+            var cacheKey = GenerateBooksPageCacheKey(request, status, category, author, cacheVersion);
+            var cachedResult = await _cacheService.GetAsync<CursorPaginationResponse<Book>>(cacheKey);
+            if (cachedResult != null)
+            {
+                return cachedResult;
+            }
+
+            var page = await _bookRepository.GetBooksPageFilteringByFields(request, status, category, author);
+            var paginationResponse = _bookPaginationService.ToCursorPageResponse(page, request);
+
+            await _cacheService.SetAsync(
+                cacheKey,
+                paginationResponse,
+                TimeSpan.FromMinutes(PageCacheDurationMinutes));
+
+            return paginationResponse;
         }
-        
-        var page = await _bookRepository.GetBooksPageFilteringByFields(request, status, category, author);
-        var paginationResponse = _bookPaginationService.ToCursorPageResponse(page, request);
-        
-        await _cacheService.SetAsync(
-            cacheKey, 
-            paginationResponse, 
-            TimeSpan.FromMinutes(PageCacheDurationMinutes));
-        
-        return paginationResponse;
+        catch (Exception ex)
+        {
+            throw new BookServiceException("Не удалось получить страницу с книгами", ex);
+        }
     }
 
     public async Task AddBookDetails(Guid bookId, string description, Stream coverImageStream, string contentType)
     {
         try
         {
-            var book = await _bookRepository.GetBook(bookId) ?? throw new BookNotFoundException("Книга не найдена");
+            var book = await _bookRepository.GetBook(bookId);
             var fileName = $"{bookId}_coverImage";
             await _fileStorageService.UploadFileAsync(fileName, coverImageStream, contentType);
             book.Description = description;
             book.CoverImagePath = fileName;
-            await _bookRepository.UpdateBook(book);
+            await _bookRepository.UpdateBook(bookId, book);
             await IncrementCacheVersion();
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new ReaderServiceException("Обнаружены не уникальные книги", ex);
+        }
+        catch (NullReferenceException ex)
+        {
+            throw new ReaderServiceException("Книга не обнаружена", ex);
         }
         catch (Exception ex)
         {

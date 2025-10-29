@@ -7,7 +7,7 @@ public interface IBookRepository
 {
     Task<Guid> CreateBook(Book book);
     Task<Book> GetBook(Guid id);
-    Task UpdateBook(Book book);
+    Task UpdateBook(Guid id, Book book);
     Task<IReadOnlyList<Book>> GetBooksPageFilteringByFields(CursorPaginationRequest request, 
         BookStatus status, BookCategory category, string author);
 }

@@ -5,9 +5,9 @@ namespace PracticalWork.Library.Models;
 /// <summary>
 /// Книга
 /// </summary>
-public sealed class Book: IModel
+public sealed class Book: ICursor
 {
-    public Guid Id { get; set; }
+    public Cursor Cursor { get; set; }
     /// <summary>Название книги</summary>
     public string Title { get; set; }
 
