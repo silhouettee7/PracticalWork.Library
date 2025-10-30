@@ -20,6 +20,9 @@ public class LibraryController: Controller
         _libraryService = libraryService;
     }
     
+    /// <summary>
+    /// Выдача книги
+    /// </summary>
     [HttpPost]
     [Route("/borrow/{bookId:guid}/{readerId:guid}")]
     [Produces("application/json")]
@@ -33,6 +36,9 @@ public class LibraryController: Controller
         return Created();
     }
     
+    /// <summary>
+    /// Возврат книги
+    /// </summary>
     [HttpPost]
     [Route("/return/{bookId:guid}/{readerId:guid}")]
     [Produces("application/json")]
@@ -46,6 +52,9 @@ public class LibraryController: Controller
         return Ok();
     }
     
+    /// <summary>
+    /// Получение деталей книги
+    /// </summary>
     [HttpGet]
     [Route("/books/{idOrTitle}/details")]
     [Produces("application/json")]
@@ -67,6 +76,9 @@ public class LibraryController: Controller
         return Ok(result.book.ToBookDetailsResponse(result.bookId));
     }
     
+    /// <summary>
+    /// Получение неархивированных книг постранично
+    /// </summary>
     [HttpPost]
     [Route("/books")]
     [Produces("application/json")]

@@ -1,20 +1,86 @@
+version: '3.8'
+
 services:
-  # PostgreSQL database
-  # Заполнить 
+  postgres:
+    image: postgres:latest
+    container_name: books-postgres
+    environment:
+      POSTGRES_DB: books
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5437:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d books"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
-  # Redis cache
-  # Заполнить 
+  redis:
+    image: redis:latest
+    container_name: books-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      
+  minio:
+    image: minio/minio
+    container_name: books-minio
+    ports:
+      - "9003:9000"
+      - "9004:9001"
+    environment:
+      MINIO_ROOT_USER: RJYwhPEf7O1DbRu5SvtF
+      MINIO_ROOT_PASSWORD: tLRHkGHBm105Nn8zGwVEEHmmGAchxkcbvINe7wjw
+    volumes:
+      - minio_data:/data
+    command: server  /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
-  # MinIO file storage
-  # Заполнить 
+  db-migrator:
+    build:
+      context: .
+      dockerfile: utils/PracticalWork.Library.Data.PostgreSql.Migrator/Dockerfile
+    container_name: books-db-migrator
+    ports:
+      - "51488:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
-  # pgAdmin for database management
-  # Заполнить 
-
-  # Redis Commander for Redis management
-  # Заполнить 
-
+  books-app:
+    build:
+      context: .
+      dockerfile: src/PracticalWork.Library.Web/Dockerfile
+    container_name: books-aspnet-app
+    ports:
+      - "5163:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
 volumes:
- postgres_data:
- redis_data:
- minio_data:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local

@@ -18,7 +18,10 @@ public class ReaderController: Controller
     {
         _readerService = readerService;
     }
-
+    
+    /// <summary>
+    /// Создание карточки читателя
+    /// </summary>
     [HttpPost]
     [Produces("application/json")]
     [ProducesResponseType<CreateReaderResponse>( 200)]
@@ -29,7 +32,10 @@ public class ReaderController: Controller
         var result = await _readerService.CreateReader(request.ToReader());
         return Ok(new CreateReaderResponse(result));
     }
-
+    
+    /// <summary>
+    /// Продление карточки читателя
+    /// </summary>
     [HttpPost]
     [Route("/{id:guid}/extend")]
     [Produces("application/json")]
@@ -43,6 +49,9 @@ public class ReaderController: Controller
         return Ok();
     }
     
+    /// <summary>
+    /// Закрытие карточки читателя
+    /// </summary>
     [HttpPost]
     [Route("/{id:guid}/close")]
     [Produces("application/json")]
@@ -62,6 +71,9 @@ public class ReaderController: Controller
             .Select(b => b.ToBookResponse()));
     }
     
+    /// <summary>
+    /// Получение информации о взятых книгах карточки читатетеля
+    /// </summary>
     [HttpGet]
     [Route("/{id:guid}/books")]
     [Produces("application/json")]

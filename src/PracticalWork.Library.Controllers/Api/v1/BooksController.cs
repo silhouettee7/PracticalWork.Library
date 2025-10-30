@@ -33,6 +33,9 @@ public class BooksController : Controller
         return Ok(new CreateBookResponse(result));
     }
     
+    /// <summary>
+    /// Обновление книги
+    /// </summary>
     [HttpPut]
     [Route("/{id:guid}")]
     [Produces("application/json")]
@@ -46,6 +49,9 @@ public class BooksController : Controller
         return Ok();
     }
 
+    /// <summary>
+    /// Архивирование книги
+    /// </summary>
     [HttpPost]
     [Route("/{id:guid}/archive")]
     [Produces("application/json")]
@@ -59,6 +65,9 @@ public class BooksController : Controller
         return Ok(result.ToArchiveBookResponse());
     }
     
+    /// <summary>
+    /// Добавление деталей к книге
+    /// </summary>
     [HttpPost]
     [Route("/details")]
     [Produces("application/json")]
@@ -73,7 +82,10 @@ public class BooksController : Controller
         await _bookService.AddBookDetails(request.Id, request.Description, stream, contentType);
         return Ok();
     }
-
+    
+    /// <summary>
+    /// Получение книг постранично
+    /// </summary>
     [HttpPost]
     [Route("/page")]
     [Produces("application/json")]
