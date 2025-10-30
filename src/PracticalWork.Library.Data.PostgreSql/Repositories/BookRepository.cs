@@ -41,11 +41,18 @@ public sealed class BookRepository : IBookRepository
         return entity.Id;
     }
 
-    public async Task<Book> GetBook(Guid id)
+    public async Task<Book> GetBookById(Guid id)
     {
         var bookEntity = await _appDbContext.Books
             .SingleOrDefaultAsync(b => b.Id == id);
         return bookEntity.ToBook();
+    }
+
+    public async Task<(Guid id, Book book)> GetBookByTitle(string title)
+    {
+        var bookEntity = await _appDbContext.Books
+            .FirstOrDefaultAsync(b => b.Title == title);
+        return (bookEntity.Id,bookEntity.ToBook());
     }
 
     public async Task UpdateBook(Guid id, Book book)
@@ -77,6 +84,18 @@ public sealed class BookRepository : IBookRepository
         };
         var entities = query
             .Where(b => b.Status == status && b.Authors.Contains(author))
+            .CursorPage(request)
+            .Select(e => e.ToBook());
+        
+        return await entities.ToListAsync();
+    }
+
+    public async Task<IReadOnlyList<Book>> GetNonArchivedBooksPageWithIssuanceRecords(
+        CursorPaginationRequest request)
+    {
+        var entities = _appDbContext.Books
+            .Where(b => b.Status != BookStatus.Archived)
+            .Include(b => b.IssuanceRecords)
             .CursorPage(request)
             .Select(e => e.ToBook());
         

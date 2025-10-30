@@ -32,6 +32,8 @@ public sealed class Book: ICursor
     /// <summary>В архиве</summary>
     public bool IsArchived { get; set; }
 
+    public IReadOnlyList<BookBorrow> IssuanceRecords  { get; set; }
+
     /// <summary>Проверка перевода в архив</summary>
     public bool CanBeArchived() => Status != BookStatus.Borrow;
 

@@ -31,8 +31,28 @@ public static class BooksExtensions
     public static ArchiveBookResponse ToArchiveBookResponse(this BookArchive book) =>
         new(book.Id, book.Title, book.ArchivedAt);
     
-    public static BookResponse ToBookDetailsResponse(this Book book) =>
-        new BookResponse(book.Title, (Contracts.v1.Enums.BookCategory)book.Category, book.Authors, book.Description, book.Year, (BookStatus)book.Status, book.IsArchived);
+    public static BookResponse ToBookResponse(this Book book) =>
+        new BookResponse(
+            book.Title, 
+            (Contracts.v1.Enums.BookCategory)book.Category, 
+            book.Authors, book.Description, 
+            book.Year, 
+            (BookStatus)book.Status, 
+            book.IsArchived);
+    
+    public static BookDetailsResponse ToBookDetailsResponse(this Book book, Guid id) =>
+        new (
+            id,
+            book.Title,
+            (Contracts.v1.Enums.BookCategory)book.Category,
+            book.Authors,
+            book.Description,
+            book.Year,
+            book.CoverImagePath,
+            (BookStatus)book.Status,
+            book.IsArchived
+            );
+    
     public static CursorPaginationRequest ToCursorPaginationRequest(this BookCursorPaginationRequest request) =>
         new()
         {
@@ -44,7 +64,14 @@ public static class BooksExtensions
     public static BookCursorPaginationResponse ToBookCursorPaginationResponse(this CursorPaginationResponse<Book> response) =>
         new (
             response.Items
-                .Select(b => b.ToBookDetailsResponse())
+                .Select(b => b.ToBookResponse())
+                .ToList(), 
+            response.NextCursor, response.PreviousCursor, response.HasNext, response.HasPrevious);
+    
+    public static BookWithIssuanceCursorPaginationResponse ToBookWithIssuanceCursorPaginationResponse(this CursorPaginationResponse<Book> response) =>
+        new (
+            response.Items
+                .Select(b => b.ToBookWithIssuanceRecordsResponse())
                 .ToList(), 
             response.NextCursor, response.PreviousCursor, response.HasNext, response.HasPrevious);
 
@@ -59,4 +86,18 @@ public static class BooksExtensions
             book.DueDate, 
             book.ReturnDate, 
             book.BorrowDate);
+    public static BookWithIssuanceRecordsResponse ToBookWithIssuanceRecordsResponse(this Book book) => 
+        new BookWithIssuanceRecordsResponse(
+            book.Title, 
+            (Contracts.v1.Enums.BookCategory)book.Category, 
+            book.Authors, book.Description, 
+            book.Year, 
+            (BookStatus)book.Status, 
+            book.IsArchived,
+            book.IssuanceRecords
+                .Select(i => i.ToIssuanceRecord())
+                .ToList()
+            );
+    public static IssuanceRecord ToIssuanceRecord(this BookBorrow book) =>
+        new((BookIssueStatus)book.Status, book.DueDate, book.ReturnDate, book.BorrowDate);
 }

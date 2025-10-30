@@ -4,7 +4,7 @@ using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.Data.PostgreSql.Extensions;
 
-public static class AbstractBookEntityExt
+public static class MapEntitiesExt
 {
     public static Book ToBook(this AbstractBookEntity bookEntity) => 
         new()
@@ -17,7 +17,23 @@ public static class AbstractBookEntityExt
             Year = bookEntity.Year,
             IsArchived = bookEntity.Status == BookStatus.Archived,
             Category = bookEntity.Category,
-            Cursor = new Cursor {Id = bookEntity.Id}
+            Cursor = new Cursor {Id = bookEntity.Id},
+            IssuanceRecords = bookEntity.IssuanceRecords?
+                .Select(b => b.ToBookBorrow())
+                .ToList() ?? new List<BookBorrow>(),
         };
-    
+
+    public static BookBorrow ToBookBorrow(this BookBorrowEntity entity) =>
+        new()
+        {
+            Status = entity.Status,
+            ReturnDate = entity.ReturnDate,
+            DueDate = entity.DueDate,
+            BorrowDate = entity.BorrowDate,
+            Book = new Book
+            {
+                Status = entity.Book.Status,
+            }
+        };
+
 }

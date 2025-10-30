@@ -16,12 +16,12 @@ public class ReaderService: IReaderService
     {
         try
         {
-            if (!await _readerRepository.IsExistReaderAsync(reader.PhoneNumber))
+            if (await _readerRepository.IsExistReader(reader.PhoneNumber))
             {
                 throw new ReaderServiceException("Phone number is not unique");
             }
             reader.IsActive = true;
-            var id = await _readerRepository.CreateReaderAsync(reader);
+            var id = await _readerRepository.CreateReader(reader);
             return id;
         }
         catch (Exception ex)
@@ -34,7 +34,7 @@ public class ReaderService: IReaderService
     {
         try
         {
-            var reader = await _readerRepository.GetReaderAsync(id);
+            var reader = await _readerRepository.GetReader(id);
             if (!reader.IsActive)
             {
                 throw new ReaderServiceException("Карточка неактивна");
@@ -45,7 +45,7 @@ public class ReaderService: IReaderService
                 throw new ReaderServiceException("Необходимо продлить карточку на будущую дату");
             }
             reader.ExpiryDate = date;
-            await _readerRepository.UpdateReaderAsync(id, reader);
+            await _readerRepository.UpdateReader(id, reader);
         }
         catch (InvalidOperationException ex)
         {
@@ -65,7 +65,7 @@ public class ReaderService: IReaderService
     {
         try
         {
-            var readerWithBorrowBooks = await _readerRepository.GetReaderWithBorrowBooksAsync(id);
+            var readerWithBorrowBooks = await _readerRepository.GetReaderWithBorrowBooks(id);
             var borrowBooksExist = readerWithBorrowBooks.BorrowBooks.Any();
             if (borrowBooksExist)
             {
@@ -73,7 +73,7 @@ public class ReaderService: IReaderService
             }
             readerWithBorrowBooks.IsActive = false;
             readerWithBorrowBooks.ExpiryDate = DateOnly.FromDateTime(DateTime.UtcNow);
-            await _readerRepository.UpdateReaderAsync(id, readerWithBorrowBooks);
+            await _readerRepository.UpdateReader(id, readerWithBorrowBooks);
             return (false, readerWithBorrowBooks.BorrowBooks);
         }
         catch (InvalidOperationException ex)
@@ -95,7 +95,7 @@ public class ReaderService: IReaderService
         try
         {
             var result = await _readerRepository
-                .GetReadersBorrowBooksAsync(readerId);
+                .GetReadersBorrowBooks(readerId);
             return result;
         }
         catch (InvalidOperationException ex)

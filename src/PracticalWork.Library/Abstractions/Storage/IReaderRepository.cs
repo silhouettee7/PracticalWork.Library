@@ -4,10 +4,10 @@ namespace PracticalWork.Library.Abstractions.Storage;
 
 public interface IReaderRepository
 {
-    Task<Guid> CreateReaderAsync(Reader reader);
-    Task<bool> IsExistReaderAsync(string phone);
-    Task<Reader> GetReaderAsync(Guid id);
-    Task UpdateReaderAsync(Guid id, Reader reader);
-    Task<Reader> GetReaderWithBorrowBooksAsync(Guid id);
-    Task<IReadOnlyList<BorrowedBook>> GetReadersBorrowBooksAsync(Guid id);
+    Task<Guid> CreateReader(Reader reader);
+    Task<bool> IsExistReader(string phone);
+    Task<Reader> GetReader(Guid id);
+    Task UpdateReader(Guid id, Reader reader);
+    Task<Reader> GetReaderWithBorrowBooks(Guid id);
+    Task<IReadOnlyList<BorrowedBook>> GetReadersBorrowBooks(Guid id);
 }

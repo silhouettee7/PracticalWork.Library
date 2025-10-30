@@ -46,7 +46,7 @@ public sealed class BookService : IBookService
     {
         try
         {
-            var book = await _bookRepository.GetBook(id);
+            var book = await _bookRepository.GetBookById(id);
             if (book.IsArchived)
             {
                 throw new BookServiceException("Книга в архиве");
@@ -75,7 +75,7 @@ public sealed class BookService : IBookService
     {
         try
         {
-            var book = await _bookRepository.GetBook(id);
+            var book = await _bookRepository.GetBookById(id);
             book.Archive();
             await _bookRepository.UpdateBook(id, book);
             await IncrementCacheVersion();
@@ -133,7 +133,7 @@ public sealed class BookService : IBookService
     {
         try
         {
-            var book = await _bookRepository.GetBook(bookId);
+            var book = await _bookRepository.GetBookById(bookId);
             var fileName = $"{bookId}_coverImage";
             await _fileStorageService.UploadFileAsync(fileName, coverImageStream, contentType);
             book.Description = description;
@@ -167,7 +167,7 @@ public sealed class BookService : IBookService
         var authorPart = $":author:{author.ToLower()}";
         var cursorPart = !string.IsNullOrEmpty(request.Cursor) ? $":cursor:{request.Cursor}" : "";
         
-        return $"books:v{cacheVersion}:page:limit:{request.PageSize}{statusPart}{categoryPart}{authorPart}{cursorPart}";
+        return $"books:v{cacheVersion}:page:limit:{request.PageSize}{statusPart}{categoryPart}{authorPart}{cursorPart}:forward:{request.Forward}";
     }
     private async Task<long> GetCurrentCacheVersion()
     {

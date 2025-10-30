@@ -14,6 +14,8 @@ public static class Entry
     {
         services.AddScoped<IBookService, BookService>();
         services.AddScoped<ICursorPaginationService<Book>, CursorPaginationService<Book>>();
+        services.AddScoped<ILibraryService, LibraryService>();
+        services.AddScoped<IReaderService, ReaderService>();
         return services;
     }
 }

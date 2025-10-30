@@ -14,29 +14,27 @@ public class ReaderRepository: IReaderRepository
     {
         _appDbContext = context;
     }
-    public async Task<Guid> CreateReaderAsync(Reader reader)
+    public async Task<Guid> CreateReader(Reader reader)
     {
-        ReaderEntity readerEntity = new ReaderEntity
-        {
-            FullName = reader.FullName,
-            PhoneNumber = reader.PhoneNumber,
-            ExpiryDate = reader.ExpiryDate,
-            IsActive = reader.IsActive,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        };
+        ReaderEntity readerEntity = new();
+        readerEntity.FullName = reader.FullName;
+        reader.PhoneNumber = reader.PhoneNumber;
+        readerEntity.ExpiryDate = reader.ExpiryDate;
+        readerEntity.IsActive = reader.IsActive;
+        readerEntity.CreatedAt = DateTime.UtcNow;
+        readerEntity.UpdatedAt = DateTime.UtcNow;
         _appDbContext.Readers.Add(readerEntity);
         await _appDbContext.SaveChangesAsync();
         
         return readerEntity.Id;
     }
 
-    public async Task<bool> IsExistReaderAsync(string phone)
+    public async Task<bool> IsExistReader(string phone)
     {
         return await _appDbContext.Readers.AnyAsync(reader => reader.PhoneNumber == phone);
     }
 
-    public async Task<Reader> GetReaderAsync(Guid id)
+    public async Task<Reader> GetReader(Guid id)
     {
         var reader = await _appDbContext.Readers
             .SingleOrDefaultAsync(reader => reader.Id == id);
@@ -49,7 +47,7 @@ public class ReaderRepository: IReaderRepository
         };
     }
 
-    public async Task UpdateReaderAsync(Guid id, Reader reader)
+    public async Task UpdateReader(Guid id, Reader reader)
     {
         var readerEntity = await _appDbContext.Readers.FindAsync(id) ?? throw new Exception("Карточка не нашлась");
         readerEntity.FullName = reader.FullName;
@@ -60,7 +58,7 @@ public class ReaderRepository: IReaderRepository
         await _appDbContext.SaveChangesAsync();
     }
 
-    public async Task<Reader> GetReaderWithBorrowBooksAsync(Guid id)
+    public async Task<Reader> GetReaderWithBorrowBooks(Guid id)
     {
         var readerEntity = await _appDbContext.Readers
             .Include(r => r.BorrowedRecords
@@ -79,7 +77,7 @@ public class ReaderRepository: IReaderRepository
         return reader;
     }
 
-    public async Task<IReadOnlyList<BorrowedBook>> GetReadersBorrowBooksAsync(Guid id)
+    public async Task<IReadOnlyList<BorrowedBook>> GetReadersBorrowBooks(Guid id)
     {
         var readerEntity = await _appDbContext.Readers
             .Include(r => r.BorrowedRecords)

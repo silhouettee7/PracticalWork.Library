@@ -59,7 +59,7 @@ public class ReaderController: Controller
         }
 
         return BadRequest(borrowBooks
-            .Select(b => b.ToBookDetailsResponse()));
+            .Select(b => b.ToBookResponse()));
     }
     
     [HttpGet]

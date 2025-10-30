@@ -17,6 +17,8 @@ public static class Entry
         serviceCollection.AddDbContext<AppDbContext>(optionsAction ?? DefaultOptionsAction, optionsLifetime: ServiceLifetime.Singleton);
 
         serviceCollection.AddScoped<IBookRepository, BookRepository>();
+        serviceCollection.AddScoped<IBookBorrowRepository, BookBorrowRepository>();
+        serviceCollection.AddScoped<IReaderRepository, ReaderRepository>();
 
         return serviceCollection;
     }
