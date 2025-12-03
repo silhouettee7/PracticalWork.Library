@@ -26,7 +26,6 @@ public class BookBorrow
             Status = BookIssueStatus.Issued
         };
         bookBorrow.DueDate = bookBorrow.BorrowDate.AddDays(30);
-        
         return bookBorrow;
     }
 

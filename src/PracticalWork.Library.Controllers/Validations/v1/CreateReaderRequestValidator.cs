@@ -12,7 +12,7 @@ public class CreateReaderRequestValidator: AbstractValidator<CreateReaderRequest
             .Matches("^\\+?\\d{1,3}[\\s-]?\\(?\\d{3}\\)?[\\s-]?\\d{3}[\\s-]?\\d{2}[\\s-]?\\d{2}$")
             .WithMessage("Неправильный формат телефона");
         RuleFor(x => x.FullName)
-            .NotEmpty().NotNull().WithMessage("ФИО обязательно")
+            .NotEmpty().WithMessage("ФИО обязательно").NotNull().WithMessage("ФИО обязательно")
             .MaximumLength(50).WithMessage("Имя не должно превышать 50 символов");
         RuleFor(x => x.ExpiryDate)
             .NotEmpty().NotNull().WithMessage("Дата окончания карточки обязательна")

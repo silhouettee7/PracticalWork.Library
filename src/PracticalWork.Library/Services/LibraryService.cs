@@ -49,7 +49,9 @@ public class LibraryService: ILibraryService
                 throw new LibraryServiceException("Нельзя выдать книгу с неактивной карточкой");
             }
             var bookBorrow = BookBorrow.CreateBookBorrow();
+            book.Status = BookStatus.Borrow;
             await _bookBorrowRepository.CreateBookBorrow(bookId, readerId, bookBorrow);
+            await _bookRepository.UpdateBook(bookId, book);
             await IncrementCacheVersion();
         }
         catch (InvalidOperationException ex)

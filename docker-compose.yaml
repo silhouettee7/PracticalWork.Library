@@ -12,12 +12,6 @@ services:
       - "5437:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d books"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
 
   redis:
     image: redis:latest
@@ -27,11 +21,6 @@ services:
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
       
   minio:
     image: minio/minio
@@ -45,38 +34,7 @@ services:
     volumes:
       - minio_data:/data
     command: server  /data --console-address ":9001"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-
-  db-migrator:
-    build:
-      context: .
-      dockerfile: utils/PracticalWork.Library.Data.PostgreSql.Migrator/Dockerfile
-    container_name: books-db-migrator
-    ports:
-      - "51488:8080"
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  books-app:
-    build:
-      context: .
-      dockerfile: src/PracticalWork.Library.Web/Dockerfile
-    container_name: books-aspnet-app
-    ports:
-      - "5163:8080"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
+      
 volumes:
   postgres_data:
     driver: local

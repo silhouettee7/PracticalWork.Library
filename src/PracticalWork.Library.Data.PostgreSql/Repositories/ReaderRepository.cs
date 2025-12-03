@@ -18,7 +18,7 @@ public class ReaderRepository: IReaderRepository
     {
         ReaderEntity readerEntity = new();
         readerEntity.FullName = reader.FullName;
-        reader.PhoneNumber = reader.PhoneNumber;
+        readerEntity.PhoneNumber = reader.PhoneNumber;
         readerEntity.ExpiryDate = reader.ExpiryDate;
         readerEntity.IsActive = reader.IsActive;
         readerEntity.CreatedAt = DateTime.UtcNow;
