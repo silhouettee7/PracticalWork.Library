@@ -4,6 +4,7 @@ using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Contracts.v1.Books.Request;
 using PracticalWork.Library.Contracts.v1.Books.Response;
 using PracticalWork.Library.Controllers.Mappers.v1;
+using PracticalWork.Library.Dtos;
 using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.Controllers.Api.v1;
@@ -64,7 +65,7 @@ public class LibraryController: Controller
     [ProducesResponseType(500)]
     public async Task<IActionResult> GetBookDetails(string idOrTitle)
     {
-        (Guid bookId, Book book) result;
+        BookDetailsDto result;
         if (Guid.TryParse(idOrTitle, out var bookId))
         {
             result = await _libraryService.GetBookDetails(bookId);
@@ -73,7 +74,7 @@ public class LibraryController: Controller
         {
             result = await _libraryService.GetBookDetails(idOrTitle);
         }
-        return Ok(result.book.ToBookDetailsResponse(result.bookId));
+        return Ok(result.Book.ToBookDetailsResponse(result.Id));
     }
     
     /// <summary>

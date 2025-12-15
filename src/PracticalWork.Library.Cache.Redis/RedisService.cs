@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 using PracticalWork.Library.Abstractions.Services;
@@ -8,11 +10,9 @@ namespace PracticalWork.Library.Cache.Redis;
 public class RedisService: ICacheService
 {
     private readonly IDistributedCache _cache;
-    private readonly IConnectionMultiplexer _redis;
-    public RedisService(IDistributedCache cache, IConnectionMultiplexer redis)
+    public RedisService(IDistributedCache cache)
     {
         _cache = cache;
-        _redis = redis;
     }
     public async Task<T> GetAsync<T>(string key)
     {
@@ -43,5 +43,29 @@ public class RedisService: ICacheService
     {
         var value = await _cache.GetStringAsync(key);
         return value != null;
+    }
+    
+    public string GenerateCacheKey(
+        string prefix,
+        long cacheVersion,
+        object parameters)
+    {
+        var json = JsonSerializer.Serialize(parameters);
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(json));
+        var data = Convert.ToHexString(hash).Substring(0,20);
+        return $"{prefix}:v{cacheVersion}:{data}";
+    }
+    
+    public async Task InvalidateCache(string cacheVersionKey)
+    {
+        var currentVersion = await GetCurrentCacheVersion(cacheVersionKey);
+        var newVersion = currentVersion + 1;
+        await SetAsync(cacheVersionKey, newVersion);
+    }
+    
+    public async Task<long> GetCurrentCacheVersion(string cacheVersionKey)
+    {
+        var version = await GetAsync<long>(cacheVersionKey);
+        return version == 0 ? 1 : version;
     }
 }

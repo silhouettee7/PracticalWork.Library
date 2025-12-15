@@ -33,4 +33,24 @@ public interface ICacheService
     /// <param name="key">ключ кеша</param>
     /// <returns>существует или нет</returns>
     Task<bool> ExistsAsync(string key);
+    /// <summary>
+    /// Инвалидация кеша
+    /// </summary>
+    /// <param name="cacheVersionKey">ключ версии кэша</param>
+    /// <returns></returns>
+    Task InvalidateCache(string cacheVersionKey);
+    /// <summary>
+    /// Получить текущую версию кэша по ключу
+    /// </summary>
+    /// <param name="cacheVersionKey">ключ версии кэша</param>
+    /// <returns></returns>
+    Task<long> GetCurrentCacheVersion(string cacheVersionKey);
+    /// <summary>
+    /// Сгенерировать ключ по префиксу и параметрам
+    /// </summary>
+    /// <param name="prefix">префикс ключа</param>
+    /// <param name="cacheVersion">версия кэша</param>
+    /// <param name="parameters">параметры</param>
+    /// <returns></returns>
+    string GenerateCacheKey(string prefix, long cacheVersion, object parameters);
 }

@@ -33,8 +33,8 @@ public interface IReaderRepository
     /// Получить выданные читателю книги
     /// </summary>
     /// <param name="id">идентификатор карточки</param>
-    /// <returns>список выданных книг</returns>
-    Task<IReadOnlyList<BorrowedBook>> GetReadersBorrowBooks(Guid id);
+    /// <returns>флаг активности карточки и список выданных книг</returns>
+    Task<(bool isActive, IReadOnlyList<BorrowedBook> books)> GetReadersBorrowBooks(Guid id);
     /// <summary>
     /// Проверить существование карточки
     /// </summary>

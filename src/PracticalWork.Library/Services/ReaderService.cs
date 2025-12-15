@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Exceptions;
@@ -8,9 +9,20 @@ namespace PracticalWork.Library.Services;
 public class ReaderService: IReaderService
 {
     private readonly IReaderRepository _readerRepository;
-    public ReaderService(IReaderRepository repository)
+    private readonly ICacheService _cacheService;
+    private readonly string _readerBooksPrefix;
+    private readonly double _readerBooksTtlInMinutes;
+    private readonly string _readersCacheVersion;
+    public ReaderService(IReaderRepository repository,
+        IConfiguration configuration,
+        ICacheService cacheService)
     {
         _readerRepository = repository;
+        _cacheService = cacheService;
+        var section = configuration.GetSection("App:Redis:Readers");
+        _readersCacheVersion = section["VersionKey"];
+        _readerBooksPrefix = section["ReaderBooks:Prefix"];
+        _readerBooksTtlInMinutes = section.GetValue<double>("ReaderBooks:TtlInMinutes");
     }
     public async Task<Guid> CreateReader(Reader reader)
     {
@@ -55,8 +67,23 @@ public class ReaderService: IReaderService
 
     public async Task<IReadOnlyList<BorrowedBook>> GetAllBorrowBooks(Guid readerId)
     {
+        var cacheVersion = await _cacheService.GetCurrentCacheVersion(_readersCacheVersion);
+        var cacheKey = _cacheService.GenerateCacheKey(_readerBooksPrefix, cacheVersion, null);
+        var cachedResult = await _cacheService.GetAsync<IReadOnlyList<BorrowedBook>>(cacheKey);
+        if (cachedResult != null)
+        {
+            return cachedResult;
+        }
         var result = await _readerRepository
             .GetReadersBorrowBooks(readerId);
-        return result;
+        if (!result.isActive)
+        {
+            throw new ReaderServiceException("Карточка неактивна");
+        }
+        await _cacheService.SetAsync(
+            cacheKey, 
+            result.books, 
+            TimeSpan.FromMinutes(_readerBooksTtlInMinutes));
+        return result.books;
     }
 }

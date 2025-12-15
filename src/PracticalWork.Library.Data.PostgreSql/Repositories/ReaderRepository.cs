@@ -83,16 +83,17 @@ public class ReaderRepository: IReaderRepository
         return reader;
     }
 
-    public async Task<IReadOnlyList<BorrowedBook>> GetReadersBorrowBooks(Guid id)
+    public async Task<(bool isActive, IReadOnlyList<BorrowedBook> books)> GetReadersBorrowBooks(Guid id)
     {
         var readerEntity = await _appDbContext.Readers
-            .Include(r => r.BorrowedRecords)
+            .Include(r => r.BorrowedRecords
+                .Where(b => b.Status == BookIssueStatus.Issued))
             .ThenInclude(b => b.Book)
-            .Select(r => new { r.Id, r.BorrowedRecords })
+            .Select(r => new { r.Id, r.IsActive, r.BorrowedRecords })
             .SingleOrDefaultAsync(r => r.Id == id)
             ?? throw new EntityNotFoundException($"Карточка:{id} не нашлась");
         
-        return readerEntity.BorrowedRecords
+        return (readerEntity.IsActive,readerEntity.BorrowedRecords
             .Select(b => new BorrowedBook 
             {
                 Title = b.Book.Title,
@@ -105,6 +106,6 @@ public class ReaderRepository: IReaderRepository
                 BorrowDate = b.BorrowDate,
                 ReturnDate = b.ReturnDate
             })
-            .ToList();
+            .ToList());
     }
 }

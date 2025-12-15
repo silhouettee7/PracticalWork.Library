@@ -1,3 +1,4 @@
+using PracticalWork.Library.Dtos;
 using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.Abstractions.Services;
@@ -26,13 +27,13 @@ public interface ILibraryService
     /// </summary>
     /// <param name="bookId">идентификатор книги</param>
     /// <returns>идентификатор книги и объект книги</returns>
-    Task<(Guid bookId, Book book)> GetBookDetails(Guid bookId);
+    Task<BookDetailsDto> GetBookDetails(Guid bookId);
     /// <summary>
     /// Получить детали книги по названию
     /// </summary>
     /// <param name="title">название книги</param>
     /// <returns>идентификатор книги и объект книги</returns>
-    Task<(Guid bookId, Book book)> GetBookDetails(string title);
+    Task<BookDetailsDto> GetBookDetails(string title);
     /// <summary>
     /// Получить не архивные книги постранично
     /// </summary>
