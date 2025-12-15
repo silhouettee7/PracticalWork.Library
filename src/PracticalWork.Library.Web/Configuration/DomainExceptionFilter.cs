@@ -1,6 +1,7 @@
 ﻿using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using PracticalWork.Library.Exceptions;
 
 namespace PracticalWork.Library.Web.Configuration;
 
@@ -33,12 +34,19 @@ public class DomainExceptionFilter<TAppException> : IAsyncActionFilter where TAp
     {
         if (exception is not TAppException)
             return;
-
+        
         var problemDetails = BuildProblemDetails(exception);
 
-        context.Result = new BadRequestObjectResult(problemDetails);
+        if (exception is NotFoundException)
+        {
+            context.Result = new NotFoundObjectResult(problemDetails);
+        }
+        else
+        {
+            context.Result = new BadRequestObjectResult(problemDetails);
+        }
         context.ExceptionHandled = true;
-
+        
         Logger.LogError(exception, "Unhandled domain exception. Transformed to Bad request (400).");
     }
 

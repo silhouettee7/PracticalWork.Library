@@ -96,8 +96,8 @@ public class BooksController : Controller
     {
         var result = await _bookService
             .GetBooksPage(request.ToCursorPaginationRequest(), 
-                (BookStatus)request.Status, 
-                (BookCategory)request.Category, 
+                request.Status is null ? null: (BookStatus)request.Status, 
+                request.Category is null ? null: (BookCategory)request.Category, 
                 request.Author);
         return Ok(result.ToBookCursorPaginationResponse());
     }

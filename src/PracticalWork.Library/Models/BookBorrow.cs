@@ -2,6 +2,9 @@ using PracticalWork.Library.Enums;
 
 namespace PracticalWork.Library.Models;
 
+/// <summary>
+/// Выдача книги
+/// </summary>
 public class BookBorrow
 {
     /// <summary>Дата выдачи книги</summary>
@@ -15,9 +18,14 @@ public class BookBorrow
 
     /// <summary>Статус книги в библиотеке</summary>
     public BookIssueStatus Status { get; set; }
-
+    /// <summary>
+    /// Объект книги
+    /// </summary>
     public Book Book { get; set; }
-
+    /// <summary>
+    ///  Создает новый объект выдачи книги
+    /// </summary>
+    /// <returns>объект выдачи книги</returns>
     public static BookBorrow CreateBookBorrow()
     {
         var bookBorrow = new BookBorrow
@@ -28,7 +36,9 @@ public class BookBorrow
         bookBorrow.DueDate = bookBorrow.BorrowDate.AddDays(30);
         return bookBorrow;
     }
-
+    /// <summary>
+    /// Возвращает книгу в библиотеку
+    /// </summary>
     public void ReturnBookBorrow()
     {
         var currentDate = DateOnly.FromDateTime(DateTime.UtcNow);

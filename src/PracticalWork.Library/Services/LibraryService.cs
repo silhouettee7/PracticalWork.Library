@@ -11,23 +11,24 @@ public class LibraryService: ILibraryService
 {
     private readonly IReaderRepository _readerRepository;
     private readonly IBookRepository _bookRepository;
-    private readonly IBookBorrowRepository _bookBorrowRepository;
+    private readonly IBorrowRepository _borrowRepository;
     private readonly IFileStorageService _fileStorageService;
     private readonly ICursorPaginationService<Book> _bookPaginationService;
     private readonly ICacheService _cacheService;
     private const string LibraryCacheVersionKey = "library:cache:version";
+    private const string BooksCacheVersionKey = "books:cache:version";
     private const int PageCacheDurationMinutes = 5;
     
     public LibraryService(IReaderRepository readerRepository, 
         IBookRepository bookRepository,
-        IBookBorrowRepository bookBorrowRepository,
+        IBorrowRepository borrowRepository,
         IFileStorageService fileStorageService,
         ICursorPaginationService<Book> bookPaginationService,
         ICacheService cacheService)
     {
         _readerRepository = readerRepository;
         _bookRepository = bookRepository;
-        _bookBorrowRepository = bookBorrowRepository;
+        _borrowRepository = borrowRepository;
         _fileStorageService = fileStorageService;
         _bookPaginationService = bookPaginationService;
         _cacheService = cacheService;
@@ -35,135 +36,69 @@ public class LibraryService: ILibraryService
     
     public async Task BorrowBook(Guid bookId, Guid readerId)
     {
-        try
+        var book = await _bookRepository.GetBookById(bookId);
+        var reader = await _readerRepository.GetReader(readerId);
+        if (book.Status is BookStatus.Borrow or BookStatus.Archived)
         {
-            var book = await _bookRepository.GetBookById(bookId);
-            var reader = await _readerRepository.GetReader(readerId);
-            if (book.Status is BookStatus.Borrow or BookStatus.Archived)
-            {
-                throw new LibraryServiceException("Нельзя выдать архивную или выданную книгу");
-            }
+            throw new LibraryServiceException("Нельзя выдать архивную или выданную книгу");
+        }
 
-            if (!reader.IsActive)
-            {
-                throw new LibraryServiceException("Нельзя выдать книгу с неактивной карточкой");
-            }
-            var bookBorrow = BookBorrow.CreateBookBorrow();
-            book.Status = BookStatus.Borrow;
-            await _bookBorrowRepository.CreateBookBorrow(bookId, readerId, bookBorrow);
-            await _bookRepository.UpdateBook(bookId, book);
-            await IncrementCacheVersion();
-        }
-        catch (InvalidOperationException ex)
+        if (!reader.IsActive)
         {
-            throw new ReaderServiceException("Обнаружены не уникальные книги или карточки", ex);
+            throw new LibraryServiceException("Нельзя выдать книгу с неактивной карточкой");
         }
-        catch (NullReferenceException ex)
-        {
-            throw new ReaderServiceException("Книга или карточка не обнаружены", ex);
-        }
-        catch (Exception ex)
-        {
-            throw new LibraryServiceException("Не удалось выдать книгу", ex);
-        }
+        var bookBorrow = BookBorrow.CreateBookBorrow();
+        book.Status = BookStatus.Borrow;
+        await _borrowRepository.CreateBookBorrow(bookId, readerId, bookBorrow);
+        await _bookRepository.UpdateBook(bookId, book);
+        await IncrementCacheVersion();
     }
 
     public async Task ReturnBook(Guid bookId, Guid readerId)
     {
-        try
-        {
-            var (id, bookBorrow) = await _bookBorrowRepository.GetBookBorrow(bookId, readerId);
-            if (bookBorrow.Status != BookIssueStatus.Issued)
-            {
-                throw new LibraryServiceException("Книга уже возвращена");
-            }
-            bookBorrow.ReturnBookBorrow();
-            await _bookBorrowRepository.UpdateReturnedBookBorrow(id, bookBorrow);
-            await IncrementCacheVersion();
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw new ReaderServiceException("Обнаружены не уникальные выдачи книг", ex);
-        }
-        catch (NullReferenceException ex)
-        {
-            throw new ReaderServiceException("Выдача книги не обнаружены", ex);
-        }
-        catch (Exception ex)
-        {
-            throw new LibraryServiceException("Не удалось вернуть книгу",ex);
-        }
-        
+        var (id, bookBorrow) = await _borrowRepository.GetBookBorrow(bookId, readerId);
+        bookBorrow.ReturnBookBorrow();
+        await _borrowRepository.ReturnBookBorrow(id, bookBorrow);
+        await IncrementCacheVersion();
     }
 
     public async Task<(Guid bookId, Book book)> GetBookDetails(Guid bookId)
     {
-        try
+        var book = await _bookRepository.GetBookById(bookId);
+        if (book.CoverImagePath is not null)
         {
-            var book = await _bookRepository.GetBookById(bookId);
-            book.CoverImagePath = await _fileStorageService.GetFileUrlAsync(book.CoverImagePath);
-            return (bookId, book);
+            book.CoverImagePath = await _fileStorageService.GetFileLinkAsync(book.CoverImagePath);
         }
-        catch (InvalidOperationException ex)
-        {
-            throw new ReaderServiceException("Обнаружены не уникальные книги", ex);
-        }
-        catch (NullReferenceException ex)
-        {
-            throw new ReaderServiceException("Книга не обнаружена", ex);
-        }
-        catch (Exception ex)
-        {
-            throw new LibraryServiceException("Не удалось получить информацию о книге",ex);
-        }
+        return (bookId, book);
     }
 
     public async Task<(Guid bookId, Book book)> GetBookDetails(string title)
     {
-        try
-        {
-            var (id,book) = await _bookRepository.GetBookByTitle(title);
-            book.CoverImagePath = await _fileStorageService.GetFileUrlAsync(book.CoverImagePath);
-            return (id, book);
-        }
-        catch (NullReferenceException ex)
-        {
-            throw new ReaderServiceException("Книга не обнаружена", ex);
-        }
-        catch (Exception ex)
-        {
-            throw new LibraryServiceException("Не удалось получить информацию о книге",ex);
-        }
-        
+        var (id,book) = await _bookRepository.GetBookByTitle(title);
+        book.CoverImagePath = await _fileStorageService.GetFileLinkAsync(book.CoverImagePath);
+        return (id, book);
     }
 
     public async Task<CursorPaginationResponse<Book>> GetNonArchivedBooksPage(CursorPaginationRequest request)
     {
-        try
+        var cacheVersion = await GetCurrentCacheVersion();
+        var cacheKey = GenerateBooksPageCacheKey(request, cacheVersion);
+        var cachedResult = await _cacheService.GetAsync<CursorPaginationResponse<Book>>(cacheKey);
+        if (cachedResult != null)
         {
-            var cacheVersion = await GetCurrentCacheVersion();
-            var cacheKey = GenerateBooksPageCacheKey(request, cacheVersion);
-            var cachedResult = await _cacheService.GetAsync<CursorPaginationResponse<Book>>(cacheKey);
-            if (cachedResult != null)
-            {
-                return cachedResult;
-            }
-            
-            var books = await _bookRepository
-                .GetNonArchivedBooksPageWithIssuanceRecords(request);
-            
-            var cursorResponse = _bookPaginationService.ToCursorPageResponse(books,request);
-            await _cacheService.SetAsync(
-                cacheKey,
-                cursorResponse,
-                TimeSpan.FromMinutes(PageCacheDurationMinutes));
-            
-            return cursorResponse;
+            return cachedResult;
         }
-        catch (Exception ex)
-        {
-            throw new LibraryServiceException("Не удалось получить страницу с книгами", ex);
-        }
+            
+        var books = await _bookRepository
+            .GetNonArchivedBooksPageWithIssuanceRecords(request);
+            
+        var cursorResponse = _bookPaginationService.ToCursorPageResponse(books,request);
+        await _cacheService.SetAsync(
+            cacheKey,
+            cursorResponse,
+            TimeSpan.FromMinutes(PageCacheDurationMinutes));
+            
+        return cursorResponse;
     }
     
     private string GenerateBooksPageCacheKey(
@@ -182,6 +117,8 @@ public class LibraryService: ILibraryService
     {
         var currentVersion = await GetCurrentCacheVersion();
         var newVersion = currentVersion + 1;
+        var bookVersion = await _cacheService.GetAsync<long>(BooksCacheVersionKey);
         await _cacheService.SetAsync(LibraryCacheVersionKey, newVersion);
+        await _cacheService.SetAsync(BooksCacheVersionKey, bookVersion + 1);
     }
 }

@@ -14,6 +14,8 @@ public sealed class Reader
 
     /// <summary>Активность карточки</summary>
     public bool IsActive { get; set; }
-
+    /// <summary>
+    /// Выданные читателю книги
+    /// </summary>
     public IReadOnlyList<Book> BorrowBooks { get; set; }
 }

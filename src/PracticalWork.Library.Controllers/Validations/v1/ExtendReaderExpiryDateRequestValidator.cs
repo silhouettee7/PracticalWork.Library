@@ -9,7 +9,7 @@ public class ExtendReaderExpiryDateRequestValidator:
     public ExtendReaderExpiryDateRequestValidator()
     {
         RuleFor(x => x.Date)
-            .NotEmpty().NotNull().WithMessage("Дата продления карточки обязательна")
+            .NotEmpty().WithMessage("Дата продления карточки обязательна")
             .GreaterThan(DateOnly.FromDateTime(DateTime.UtcNow));
     }
 }

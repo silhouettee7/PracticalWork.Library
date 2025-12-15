@@ -3,6 +3,7 @@ using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Data.PostgreSql.Entities;
 using PracticalWork.Library.Data.PostgreSql.Extensions;
 using PracticalWork.Library.Enums;
+using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.Data.PostgreSql.Repositories;
@@ -44,20 +45,23 @@ public sealed class BookRepository : IBookRepository
     public async Task<Book> GetBookById(Guid id)
     {
         var bookEntity = await _appDbContext.Books
-            .SingleOrDefaultAsync(b => b.Id == id);
+            .SingleOrDefaultAsync(b => b.Id == id)
+            ?? throw new EntityNotFoundException($"Книга с id:{id} не найдена");
         return bookEntity.ToBook();
     }
 
     public async Task<(Guid id, Book book)> GetBookByTitle(string title)
     {
         var bookEntity = await _appDbContext.Books
-            .FirstOrDefaultAsync(b => b.Title == title);
+            .FirstOrDefaultAsync(b => b.Title == title)
+            ?? throw new EntityNotFoundException($"Книга с названием:{title} не найдена");
         return (bookEntity.Id,bookEntity.ToBook());
     }
 
     public async Task UpdateBook(Guid id, Book book)
     {
-        var entity = await _appDbContext.Books.FindAsync(id);
+        var entity = await _appDbContext.Books.SingleOrDefaultAsync(b => b.Id == id) 
+                     ?? throw new EntityNotFoundException($"Книга с id:{id} не найдена");
         entity.Title = book.Title;
         entity.Description = book.Description;
         entity.Year = book.Year;
@@ -73,7 +77,7 @@ public sealed class BookRepository : IBookRepository
     }
 
     public async Task<IReadOnlyList<Book>> GetBooksPageFilteringByFields(
-        CursorPaginationRequest request, BookStatus status, BookCategory category, string author)
+        CursorPaginationRequest request, BookStatus? status, BookCategory? category, string author)
     {
         IQueryable<AbstractBookEntity> query = category switch
         {
@@ -83,8 +87,10 @@ public sealed class BookRepository : IBookRepository
             _ => _appDbContext.Books
         };
         var entities = query
-            .Where(b => b.Status == status && b.Authors.Contains(author))
-            .CursorPage(request)
+            .Where(b => !status.HasValue || b.Status == status)
+            .Where(b => !category.HasValue || b.Category == category)
+            .Where(b => string.IsNullOrWhiteSpace(author) || b.Authors.Contains(author))
+            .CursorPage(request)    
             .Select(e => e.ToBook());
         
         return await entities.ToListAsync();

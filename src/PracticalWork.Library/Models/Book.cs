@@ -7,6 +7,9 @@ namespace PracticalWork.Library.Models;
 /// </summary>
 public sealed class Book: ICursor
 {
+    /// <summary>
+    /// Идентификатор для курсорной пагинации
+    /// </summary>
     public Cursor Cursor { get; set; }
     /// <summary>Название книги</summary>
     public string Title { get; set; }
@@ -31,7 +34,9 @@ public sealed class Book: ICursor
 
     /// <summary>В архиве</summary>
     public bool IsArchived { get; set; }
-
+    /// <summary>
+    /// Записи о выдачах книги
+    /// </summary>
     public IReadOnlyList<BookBorrow> IssuanceRecords  { get; set; }
 
     /// <summary>Проверка перевода в архив</summary>
@@ -49,18 +54,14 @@ public sealed class Book: ICursor
         IsArchived = true;
         Status = BookStatus.Archived;
     }
-
+    
     /// <summary>
-    /// Обновление деталей
+    /// Обновление информации о книге
     /// </summary>
-    /// <param name="description"> Краткое описание книги </param>
-    /// <param name="coverImagePath"> Путь к изображению обложки </param>
-    public void UpdateDetails(string description, string coverImagePath)
-    {
-        Description = description;
-        CoverImagePath = coverImagePath;
-    }
-
+    /// <param name="title">название книги</param>
+    /// <param name="description">описание</param>
+    /// <param name="year">год</param>
+    /// <param name="authors">авторы</param>
     public void Update(string title, string description, int year, IReadOnlyList<string> authors)
     {
         Title = title;

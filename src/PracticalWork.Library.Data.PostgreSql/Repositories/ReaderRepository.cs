@@ -3,6 +3,7 @@ using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Data.PostgreSql.Entities;
 using PracticalWork.Library.Data.PostgreSql.Extensions;
 using PracticalWork.Library.Enums;
+using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.Data.PostgreSql.Repositories;
@@ -16,13 +17,15 @@ public class ReaderRepository: IReaderRepository
     }
     public async Task<Guid> CreateReader(Reader reader)
     {
-        ReaderEntity readerEntity = new();
-        readerEntity.FullName = reader.FullName;
-        readerEntity.PhoneNumber = reader.PhoneNumber;
-        readerEntity.ExpiryDate = reader.ExpiryDate;
-        readerEntity.IsActive = reader.IsActive;
-        readerEntity.CreatedAt = DateTime.UtcNow;
-        readerEntity.UpdatedAt = DateTime.UtcNow;
+        ReaderEntity readerEntity = new()
+        {
+            FullName = reader.FullName,
+            PhoneNumber = reader.PhoneNumber,
+            ExpiryDate = reader.ExpiryDate,
+            IsActive = reader.IsActive,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
         _appDbContext.Readers.Add(readerEntity);
         await _appDbContext.SaveChangesAsync();
         
@@ -37,7 +40,8 @@ public class ReaderRepository: IReaderRepository
     public async Task<Reader> GetReader(Guid id)
     {
         var reader = await _appDbContext.Readers
-            .SingleOrDefaultAsync(reader => reader.Id == id);
+            .SingleOrDefaultAsync(reader => reader.Id == id)
+            ?? throw new EntityNotFoundException($"Карточка:{id} не найдена");
         return new Reader
         {
             FullName = reader.FullName,
@@ -49,7 +53,8 @@ public class ReaderRepository: IReaderRepository
 
     public async Task UpdateReader(Guid id, Reader reader)
     {
-        var readerEntity = await _appDbContext.Readers.FindAsync(id) ?? throw new Exception("Карточка не нашлась");
+        var readerEntity = await _appDbContext.Readers.SingleOrDefaultAsync(r => r.Id == id) 
+                           ?? throw new EntityNotFoundException($"Карточка:{id} не нашлась");
         readerEntity.FullName = reader.FullName;
         readerEntity.PhoneNumber = reader.PhoneNumber;
         readerEntity.ExpiryDate = reader.ExpiryDate;
@@ -64,7 +69,8 @@ public class ReaderRepository: IReaderRepository
             .Include(r => r.BorrowedRecords
                 .Where(b => b.Status == BookIssueStatus.Issued))
             .ThenInclude(b => b.Book)
-            .SingleOrDefaultAsync(r => r.Id == id);
+            .SingleOrDefaultAsync(r => r.Id == id)
+            ?? throw new EntityNotFoundException($"Карточка:{id} не нашлась");
         var reader = new Reader
         {
             FullName = readerEntity.FullName,
@@ -83,7 +89,8 @@ public class ReaderRepository: IReaderRepository
             .Include(r => r.BorrowedRecords)
             .ThenInclude(b => b.Book)
             .Select(r => new { r.Id, r.BorrowedRecords })
-            .SingleOrDefaultAsync(r => r.Id == id);
+            .SingleOrDefaultAsync(r => r.Id == id)
+            ?? throw new EntityNotFoundException($"Карточка:{id} не нашлась");
         
         return readerEntity.BorrowedRecords
             .Select(b => new BorrowedBook 

@@ -2,15 +2,17 @@ using Microsoft.EntityFrameworkCore;
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Data.PostgreSql.Entities;
 using PracticalWork.Library.Data.PostgreSql.Extensions;
+using PracticalWork.Library.Enums;
+using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.Data.PostgreSql.Repositories;
 
-public class BookBorrowRepository: IBookBorrowRepository
+public class BorrowRepository: IBorrowRepository
 {
     private readonly AppDbContext _appDbContext;
 
-    public BookBorrowRepository(AppDbContext appDbContext)
+    public BorrowRepository(AppDbContext appDbContext)
     {
         _appDbContext = appDbContext;
     }
@@ -33,15 +35,18 @@ public class BookBorrowRepository: IBookBorrowRepository
     {
         var entity = await _appDbContext.BookBorrows
             .Include(b => b.Book)
-            .SingleOrDefaultAsync(b => b.BookId == bookId && b.ReaderId == readerId);
+            .Where(b => b.Status == BookIssueStatus.Issued)
+            .SingleOrDefaultAsync(b => b.BookId == bookId && b.ReaderId == readerId)
+            ?? throw new EntityNotFoundException($"Выдача книги:{bookId} у читателя:{readerId} не обнаружена");
         return (entity.Id, entity.ToBookBorrow());
     }
 
-    public async Task UpdateReturnedBookBorrow(Guid bookBorrowId, BookBorrow bookBorrow)
+    public async Task ReturnBookBorrow(Guid bookBorrowId, BookBorrow bookBorrow)
     {
         var entity = await _appDbContext.BookBorrows
             .Include(b => b.Book)
-            .SingleOrDefaultAsync(b => b.Id == bookBorrowId);
+            .SingleOrDefaultAsync(b => b.Id == bookBorrowId)
+            ?? throw new EntityNotFoundException($"Выдача книги не обнаружена, id:{bookBorrowId}");
         entity.Status = bookBorrow.Status;
         entity.ReturnDate = bookBorrow.ReturnDate;
         entity.Book.Status = bookBorrow.Book.Status;

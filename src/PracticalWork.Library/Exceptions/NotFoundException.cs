@@ -2,7 +2,7 @@ namespace PracticalWork.Library.Exceptions;
 
 public class NotFoundException: AppException
 {
-    public NotFoundException(string message) : base(message)
+    public NotFoundException(string message): base(message)
     {
         
     }

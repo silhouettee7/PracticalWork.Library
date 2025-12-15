@@ -1,6 +1,6 @@
 namespace PracticalWork.Library.Exceptions;
 
-public class ReaderServiceException: Exception
+public class ReaderServiceException: AppException
 {
     public ReaderServiceException(string message) : base(message)
     {

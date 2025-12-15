@@ -59,7 +59,7 @@ public class MinioService : IFileStorageService
         return true;
     }
 
-    public async Task<string> GetFileUrlAsync(string fileName, CancellationToken cancellationToken = default)
+    public async Task<string> GetFileLinkAsync(string fileName, CancellationToken cancellationToken = default)
     {
         var expiryInSeconds = _minioOptions.ExpInSeconds;
 
