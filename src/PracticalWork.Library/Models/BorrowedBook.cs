@@ -2,6 +2,9 @@ using PracticalWork.Library.Enums;
 
 namespace PracticalWork.Library.Models;
 
+/// <summary>
+/// Выдача книги с подробной информацией
+/// </summary>
 public class BorrowedBook
 {
     /// <summary>Название книги</summary>

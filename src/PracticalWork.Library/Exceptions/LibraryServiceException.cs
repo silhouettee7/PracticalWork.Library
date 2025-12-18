@@ -1,5 +1,8 @@
 namespace PracticalWork.Library.Exceptions;
 
+/// <summary>
+/// Исключения уровня сервиса работы библиотеки
+/// </summary>
 public class LibraryServiceException: AppException
 {
     public LibraryServiceException(string message) : base(message)

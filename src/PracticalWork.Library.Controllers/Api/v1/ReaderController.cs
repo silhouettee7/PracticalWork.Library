@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Contracts.v1.Books.Request;
 using PracticalWork.Library.Contracts.v1.Books.Response;
+using PracticalWork.Library.Contracts.v1.Reader.Request;
+using PracticalWork.Library.Contracts.v1.Reader.Response;
 using PracticalWork.Library.Controllers.Mappers.v1;
 
 namespace PracticalWork.Library.Controllers.Api.v1;

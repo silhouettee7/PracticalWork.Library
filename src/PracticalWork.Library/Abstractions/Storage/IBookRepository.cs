@@ -3,6 +3,9 @@ using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.Abstractions.Storage;
 
+/// <summary>
+/// Репозиторий получения данных о книгах
+/// </summary>
 public interface IBookRepository
 {
     /// <summary>

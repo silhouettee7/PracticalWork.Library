@@ -1,4 +1,5 @@
-﻿using PracticalWork.Library.Contracts.v1.Books.Request;
+﻿using PracticalWork.Library.Contracts.v1.Abstracts;
+using PracticalWork.Library.Contracts.v1.Books.Request;
 using PracticalWork.Library.Contracts.v1.Books.Response;
 using PracticalWork.Library.Enums;
 using PracticalWork.Library.Models;
@@ -53,14 +54,6 @@ public static class BooksExtensions
             book.IsArchived
             );
     
-    public static CursorPaginationRequest ToCursorPaginationRequest(this BookCursorPaginationRequest request) =>
-        new()
-        {
-            Cursor = request.Cursor,
-            Forward = request.Forward,
-            PageSize = request.PageSize,
-        };
-    
     public static BookCursorPaginationResponse ToBookCursorPaginationResponse(this CursorPaginationResponse<Book> response) =>
         new (
             response.Items
@@ -74,18 +67,7 @@ public static class BooksExtensions
                 .Select(b => b.ToBookWithIssuanceRecordsResponse())
                 .ToList(), 
             response.NextCursor, response.PreviousCursor, response.HasNext, response.HasPrevious);
-
-    public static BorrowedBookResponse ToBorrowedBookResponse(this BorrowedBook book) =>
-        new (
-            book.Title, 
-            (Contracts.v1.Enums.BookCategory)book.Category, 
-            book.Authors,
-            book.Description, 
-            book.Year, 
-            (BookIssueStatus)book.Status, 
-            book.DueDate, 
-            book.ReturnDate, 
-            book.BorrowDate);
+    
     public static BookWithIssuanceRecordsResponse ToBookWithIssuanceRecordsResponse(this Book book) => 
         new BookWithIssuanceRecordsResponse(
             book.Title, 

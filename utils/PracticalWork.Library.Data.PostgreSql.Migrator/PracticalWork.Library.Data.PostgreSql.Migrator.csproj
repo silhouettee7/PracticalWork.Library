@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\PracticalWork.Library.Data.PostgreSql\PracticalWork.Library.Data.PostgreSql.csproj" />
+    <ProjectReference Include="..\..\src\PracticalWork.Library.Reports.PostgreSql\PracticalWork.Library.Reports.PostgreSql.csproj" />
   </ItemGroup>
 
   <ItemGroup>

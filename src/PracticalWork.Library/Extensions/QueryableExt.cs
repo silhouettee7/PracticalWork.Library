@@ -1,8 +1,7 @@
-using Microsoft.EntityFrameworkCore;
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Models;
 
-namespace PracticalWork.Library.Data.PostgreSql.Extensions;
+namespace PracticalWork.Library.Extensions;
 
 public static class QueryableExt
 {

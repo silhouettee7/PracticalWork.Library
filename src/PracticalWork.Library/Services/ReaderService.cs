@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Configuration;
+using PracticalWork.Library.Abstractions.MessageBroker;
 using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Abstractions.Storage;
+using PracticalWork.Library.Events;
 using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Models;
 
@@ -9,13 +11,18 @@ namespace PracticalWork.Library.Services;
 public class ReaderService: IReaderService
 {
     private readonly IReaderRepository _readerRepository;
+    private readonly IRabbitMQPublisher _publisher;
     private readonly ICacheService _cacheService;
     private readonly string _readerBooksPrefix;
     private readonly double _readerBooksTtlInMinutes;
     private readonly string _readersCacheVersion;
+    private readonly IConfigurationSection _rabbitLibrarySection;
+    private readonly string _exchangeName;
+    
     public ReaderService(IReaderRepository repository,
         IConfiguration configuration,
-        ICacheService cacheService)
+        ICacheService cacheService,
+        IRabbitMQPublisher publisher)
     {
         _readerRepository = repository;
         _cacheService = cacheService;
@@ -23,6 +30,9 @@ public class ReaderService: IReaderService
         _readersCacheVersion = section["VersionKey"];
         _readerBooksPrefix = section["ReaderBooks:Prefix"];
         _readerBooksTtlInMinutes = section.GetValue<double>("ReaderBooks:TtlInMinutes");
+        _rabbitLibrarySection = configuration.GetSection("App:RabbitMQ:Library");
+        _exchangeName = _rabbitLibrarySection["ExchangeName"];
+        _publisher = publisher;
     }
     public async Task<Guid> CreateReader(Reader reader)
     {
@@ -32,6 +42,12 @@ public class ReaderService: IReaderService
         }
         reader.IsActive = true;
         var id = await _readerRepository.CreateReader(reader);
+        var message = new ReaderCreatedEvent(id, reader.FullName,
+            reader.PhoneNumber, reader.ExpiryDate, DateTime.UtcNow);
+        await _publisher.PublishAsync(
+            _exchangeName, 
+            _rabbitLibrarySection["ReaderCreate:RoutingKey"], 
+            message);
         return id;
     }
 
@@ -62,6 +78,12 @@ public class ReaderService: IReaderService
         readerWithBorrowBooks.IsActive = false;
         readerWithBorrowBooks.ExpiryDate = DateOnly.FromDateTime(DateTime.UtcNow);
         await _readerRepository.UpdateReader(id, readerWithBorrowBooks);
+        var message = new ReaderClosedEvent(id, readerWithBorrowBooks.FullName,
+            DateTime.UtcNow, "Вызван метод закрытия карточки");
+        await _publisher.PublishAsync(
+            _exchangeName, 
+            _rabbitLibrarySection["CloseReader:RoutingKey"], 
+            message);
         return (false, readerWithBorrowBooks.BorrowBooks);
     }
 

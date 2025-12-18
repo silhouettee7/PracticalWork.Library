@@ -1,13 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace PracticalWork.Library.Data.PostgreSql;
+namespace PracticalWork.Library.Reports.PostgreSql;
 
-/// <summary>
-/// Класс для применения миграций БД
-/// </summary>
-public static class MigrationsRunner
+public class ReportsMigrationsRunner
 {
     public static async Task ApplyMigrations(ILogger logger, IServiceProvider serviceProvider, string appName)
     {
@@ -17,7 +14,7 @@ public static class MigrationsRunner
         {
             using (var serviceScope = serviceProvider.CreateScope())
             {
-                var dbContext = serviceScope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var dbContext = serviceScope.ServiceProvider.GetRequiredService<ReportsDbContext>();
                 await dbContext.Database.MigrateAsync();
             }
 

@@ -1,4 +1,5 @@
 using PracticalWork.Library.Contracts.v1.Books.Request;
+using PracticalWork.Library.Contracts.v1.Reader.Request;
 using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.Controllers.Mappers.v1;

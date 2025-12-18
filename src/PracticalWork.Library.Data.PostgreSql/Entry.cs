@@ -14,7 +14,7 @@ public static class Entry
     /// </summary>
     public static IServiceCollection AddPostgreSqlStorage(this IServiceCollection serviceCollection, Action<DbContextOptionsBuilder> optionsAction)
     {
-        serviceCollection.AddDbContext<AppDbContext>(optionsAction ?? DefaultOptionsAction, optionsLifetime: ServiceLifetime.Singleton);
+        serviceCollection.AddDbContext<AppDbContext>(optionsAction ?? DefaultOptionsAction, optionsLifetime: ServiceLifetime.Scoped);
 
         serviceCollection.AddScoped<IBookRepository, BookRepository>();
         serviceCollection.AddScoped<IBorrowRepository, BorrowRepository>();

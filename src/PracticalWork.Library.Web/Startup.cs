@@ -8,6 +8,8 @@ using PracticalWork.Library.Data.PostgreSql;
 using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Web.Configuration;
 using System.Text.Json.Serialization;
+using PracticalWork.Library.MessageBroker;
+using PracticalWork.Library.Reports.PostgreSql;
 
 namespace PracticalWork.Library.Web;
 
@@ -27,12 +29,28 @@ public class Startup
     {
         services.AddPostgreSqlStorage(cfg =>
         {
-            var npgsqlDataSource = new NpgsqlDataSourceBuilder(Configuration["App:DbConnectionString"])
+            var connectionString = Configuration
+                .GetSection("App")
+                .GetConnectionString(nameof(AppDbContext));
+            var npgsqlDataSource = new NpgsqlDataSourceBuilder(connectionString)
                 .EnableDynamicJson()
                 .Build();
 
             cfg.UseNpgsql(npgsqlDataSource);
         });
+
+        services.AddReportsPostgreSqlStorage(cfg =>
+            {
+                var connectionString = Configuration
+                    .GetSection("App")
+                    .GetConnectionString(nameof(ReportsDbContext));
+                var npgsqlDataSource = new NpgsqlDataSourceBuilder(connectionString)
+                    .EnableDynamicJson()
+                    .Build();
+
+                cfg.UseNpgsql(npgsqlDataSource);
+            }    
+        );
 
         services.AddMvc(opt =>
             {
@@ -56,6 +74,7 @@ public class Startup
         services.AddDomain();
         services.AddCache(Configuration);
         services.AddMinioFileStorage(Configuration);
+        services.AddMessageBroker(Configuration);
     }
 
     [UsedImplicitly]

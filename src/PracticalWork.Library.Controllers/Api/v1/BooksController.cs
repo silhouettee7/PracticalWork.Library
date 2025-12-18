@@ -29,7 +29,6 @@ public class BooksController : Controller
     public async Task<IActionResult> CreateBook(CreateBookRequest request)
     {
         var result = await _bookService.CreateBook(request.ToBook());
-
         return Ok(new CreateBookResponse(result));
     }
     

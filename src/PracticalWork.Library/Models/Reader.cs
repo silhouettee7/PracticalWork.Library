@@ -1,5 +1,8 @@
 namespace PracticalWork.Library.Models;
 
+/// <summary>
+/// Читательская карточка
+/// </summary>
 public sealed class Reader
 {
     /// <summary>ФИО</summary>

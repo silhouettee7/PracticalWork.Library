@@ -2,6 +2,9 @@ using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.Abstractions.Storage;
 
+/// <summary>
+/// Репозиторий получения данных о карточках читателя
+/// </summary>
 public interface IReaderRepository
 {
     /// <summary>

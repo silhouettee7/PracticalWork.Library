@@ -8,4 +8,8 @@
     <PackageReference Include="Microsoft.AspNetCore.Http" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\PracticalWork.Library\PracticalWork.Library.csproj" />
+  </ItemGroup>
+
 </Project>
