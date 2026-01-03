@@ -3,7 +3,7 @@ namespace PracticalWork.Library.Abstractions.MessageBroker;
 /// <summary>
 /// Издатель, отправляет сообщения в очередь
 /// </summary>
-public interface IRabbitMQPublisher
+public interface IRabbitMqPublisher
 {
     /// <summary>
     /// Опубликовать сообщение

@@ -3,7 +3,7 @@ namespace PracticalWork.Library.Abstractions.MessageBroker;
 /// <summary>
 /// Потребитель очереди сообщений
 /// </summary>
-public interface IRabbitMQConsumer
+public interface IRabbitMqConsumer
 {
     /// <summary>
     /// Подписаться на очередь, получать сообщения и обрабатывать

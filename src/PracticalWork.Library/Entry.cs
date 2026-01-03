@@ -12,7 +12,7 @@ public static class Entry
     /// <summary>
     /// Регистрация зависимостей уровня бизнес-логики
     /// </summary>
-    public static IServiceCollection AddDomain(this IServiceCollection services)
+    public static IServiceCollection AddBaseDomain(this IServiceCollection services)
     {
         services.AddScoped<IBookService, BookService>();
         services.AddScoped<ICursorPaginationService<Book>, CursorPaginationService<Book>>();
@@ -20,6 +20,13 @@ public static class Entry
         services.AddScoped<ILibraryService, LibraryService>();
         services.AddScoped<IReaderService, ReaderService>();
         services.AddScoped<IReportService, ReportService>();
+        services.AddScoped<IActivityLogService, ActivityLogService>();
+        return services;
+    }
+    
+    public static IServiceCollection AddConsumerDomain(this IServiceCollection services)
+    {
+        services.AddScoped<IConsumerService, ConsumerService>();
         services.AddScoped<IReportGenerateService, ReportGenerateService>();
         return services;
     }

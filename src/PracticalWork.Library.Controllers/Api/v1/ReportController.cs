@@ -13,10 +13,13 @@ namespace PracticalWork.Library.Controllers.Api.v1;
 public class ReportController: Controller
 {
     private readonly IReportService _reportService;
+    private readonly IActivityLogService _activityLogService;
 
-    public ReportController(IReportService reportService)
+    public ReportController(IReportService reportService,
+        IActivityLogService activityLogService)
     {
         _reportService = reportService;
+        _activityLogService = activityLogService;
     }
     
     /// <summary>
@@ -31,7 +34,7 @@ public class ReportController: Controller
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetActivityLogs(ActivityLogsPaginationRequest request)
     {
-        var result = await _reportService.ReadSystemActivityLogs(
+        var result = await _activityLogService.ReadSystemActivityLogs(
             request.ToCursorPaginationRequest(), 
             request.EventTypes.ToArray(),
             request.PeriodFrom, request.PeriodTo);
@@ -44,7 +47,7 @@ public class ReportController: Controller
     /// <param name="request">отчет с фильтрами</param>
     /// <returns>created</returns>
     [HttpPost("/generate")]
-    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateReportCsv(ReportCreateRequest request)
@@ -60,7 +63,7 @@ public class ReportController: Controller
     /// Получить созданные отчеты
     /// </summary>
     /// <returns>информация об отчетах</returns>
-    [HttpPost("/")]
+    [HttpGet("/")]
     [Produces("application/json")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -76,7 +79,7 @@ public class ReportController: Controller
     /// </summary>
     /// <param name="reportName">название файла отчета</param>
     /// <returns>url отчета</returns>
-    [HttpPost("/{reportName}/download")]
+    [HttpGet("/{reportName}/download")]
     [Produces("text/plain")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

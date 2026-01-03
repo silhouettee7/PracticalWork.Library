@@ -71,10 +71,12 @@ public class Startup
             c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "PracticalWork.Library.Controllers.xml"));
         });
 
-        services.AddDomain();
+        services.AddBaseDomain();
         services.AddCache(Configuration);
         services.AddMinioFileStorage(Configuration);
-        services.AddMessageBroker(Configuration);
+        services
+            .AddMessageBroker(Configuration)
+            .AddProducing();
     }
 
     [UsedImplicitly]

@@ -7,13 +7,13 @@ using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.MessageBroker.Rabbit.Consumers;
 
-public class SystemActivityConsumer<T>: RabbitMQConsumer<T> where T: BaseEvent
+public class SystemActivityConsumer<T>: RabbitMConsumer<T> where T: BaseEvent
 {
     private readonly IServiceScopeFactory _serviceScopeFactory;
     
     public SystemActivityConsumer(
-        ILogger<RabbitMQConsumer<T>> logger, 
-        IRabbitMQChannelPool channelPool,
+        ILogger<RabbitMConsumer<T>> logger, 
+        IRabbitMqChannelPool channelPool,
         IServiceScopeFactory serviceScopeFactory) 
         : base(logger, channelPool)
     {
@@ -23,7 +23,7 @@ public class SystemActivityConsumer<T>: RabbitMQConsumer<T> where T: BaseEvent
     protected override async Task ProcessMessageAsync(T? messageObject)
     {
         var scope = _serviceScopeFactory.CreateScope();
-        var reportService = scope.ServiceProvider.GetRequiredService<IReportService>();
+        var activityLogService = scope.ServiceProvider.GetRequiredService<IConsumerService>();
         if (messageObject is { Source: "library-service" })
         {
             var log = new ActivityLog
@@ -32,7 +32,7 @@ public class SystemActivityConsumer<T>: RabbitMQConsumer<T> where T: BaseEvent
                 EventDate = messageObject.OccurredOn,
                 EventType = messageObject.EventType
             };
-            await reportService.WriteSystemActivityLogs(log);
+            await activityLogService.WriteSystemActivityLogs(log);
         }
         else
         {

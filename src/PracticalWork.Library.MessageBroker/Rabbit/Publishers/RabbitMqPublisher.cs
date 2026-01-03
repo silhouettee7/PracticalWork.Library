@@ -7,14 +7,14 @@ using RabbitMQ.Client;
 
 namespace PracticalWork.Library.MessageBroker.Rabbit.Publishers;
 
-public class RabbitMQPublisher: IRabbitMQPublisher
+public class RabbitMqPublisher: IRabbitMqPublisher
 {
-    private readonly IRabbitMQChannelPool _channelPool;
-    private readonly ILogger<RabbitMQPublisher> _logger;
+    private readonly IRabbitMqChannelPool _channelPool;
+    private readonly ILogger<RabbitMqPublisher> _logger;
 
-    public RabbitMQPublisher(
-        IRabbitMQChannelPool channelPool,
-        ILogger<RabbitMQPublisher> logger)
+    public RabbitMqPublisher(
+        IRabbitMqChannelPool channelPool,
+        ILogger<RabbitMqPublisher> logger)
     {
         _channelPool = channelPool;
         _logger = logger;

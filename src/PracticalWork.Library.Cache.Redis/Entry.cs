@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PracticalWork.Library.Abstractions.Services;
+using PracticalWork.Library.Options;
 using StackExchange.Redis;
 
 namespace PracticalWork.Library.Cache.Redis;
@@ -14,6 +15,7 @@ public static class Entry
     {
         var connectionString = configuration["App:Redis:RedisCacheConnection"];
         var prefix = configuration["App:Redis:RedisCachePrefix"];
+        serviceCollection.Configure<RedisOptions>(configuration.GetSection("App:Redis"));
         serviceCollection.AddStackExchangeRedisCache(options =>
         {
             options.Configuration = connectionString;

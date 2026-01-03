@@ -12,58 +12,40 @@ namespace PracticalWork.Library.Services;
 
 public class ReportService: IReportService
 {
-    private readonly IActivityLogRepository _activityLogRepository;
-    private readonly ICursorPaginationService<ActivityLog> _cursorPaginationService;
     private readonly IReportRepository _reportRepository;
-    private readonly IRabbitMQPublisher _publisher;
+    private readonly IRabbitMqPublisher _publisher;
     private readonly IFileStorageService _fileStorageService;
-    private readonly IReportGenerateService _reportGenerateService;
     private readonly ICacheService _cacheService;
-    private readonly MinioOptions _minioOptions;
-    private readonly string _exchangeName;
-    private readonly string _routingKey;
-    private readonly string _cacheVersion;
-    private readonly string _reportsListPrefix;
-    private readonly double _reportsListTtlInMinutes;
-    
-    public ReportService(IActivityLogRepository activityLogRepository,
-        ICursorPaginationService<ActivityLog> cursorPaginationService,
+    private readonly string _reportsExchangeName;
+    private readonly string _reportsRoutingKey;
+    private readonly string _reportsCacheVersionKey;
+    private readonly string _reportsListCachePrefix;
+    private readonly double _reportsListCacheTtlInMinutes;
+    private readonly string _reportsBucketName;
+
+    public ReportService(
         IReportRepository reportRepository,
-        IRabbitMQPublisher publisher,
-        IConfiguration configuration,
+        IRabbitMqPublisher publisher,
         ICacheService cacheService,
         IFileStorageService fileStorageService,
         IOptionsMonitor<MinioOptions> minioOptions,
-        IReportGenerateService reportGenerateService)
+        IOptionsMonitor<RedisOptions> redisOptions,
+        IOptionsMonitor<RabbitOptions> rabbitOptions)
     {
-        _activityLogRepository = activityLogRepository;
-        _cursorPaginationService = cursorPaginationService;
-        _reportGenerateService = reportGenerateService;
         _reportRepository = reportRepository;
         _cacheService = cacheService;
         _fileStorageService = fileStorageService;
         _publisher = publisher;
-        _minioOptions = minioOptions.CurrentValue;
-        var rabbitSection = configuration.GetSection("App:RabbitMQ:Reports");
-        _exchangeName = rabbitSection["Exchange"];
-        _routingKey = rabbitSection["RoutingKey"];
-        var redisSection = configuration.GetSection("App:Redis:Reports");
-        _cacheVersion = redisSection["VersionKey"];
-        _reportsListPrefix = redisSection["ReportsList:Prefix"];
-        _reportsListTtlInMinutes = redisSection.GetValue<double>("ReportsList:TtlInMinutes");
-    }
-
-    public async Task WriteSystemActivityLogs(ActivityLog log)
-    {
-        await _activityLogRepository.AddLogAsync(log);
-    }
-
-    public async Task<CursorPaginationResponse<ActivityLog>> ReadSystemActivityLogs(CursorPaginationRequest request, 
-        string[] eventTypes, DateOnly? eventDateFrom, DateOnly? eventDateTo)
-    {
-        var logs = await _activityLogRepository
-            .GetLogsPageAsync(request, eventDateFrom, eventDateTo, eventTypes);
-        return _cursorPaginationService.ToCursorPageResponse(logs, request);
+        var minioOpt = minioOptions.CurrentValue;
+        var redisOpt = redisOptions.CurrentValue;
+        var rabbitOpt = rabbitOptions.CurrentValue;
+        
+        _reportsExchangeName = rabbitOpt.Reports.Exchange;
+        _reportsRoutingKey = rabbitOpt.Reports.RoutingKey;
+        _reportsCacheVersionKey = redisOpt.Reports.VersionKey;
+        _reportsListCachePrefix = redisOpt.Reports.ReportsList.Prefix;
+        _reportsListCacheTtlInMinutes = redisOpt.Reports.ReportsList.TtlInMinutes;
+        _reportsBucketName = minioOpt.ReportsBucketName;
     }
 
     public async Task<Report> CreateReport(DateOnly? eventDateFrom, DateOnly? eventDateTo, string[] eventTypes)
@@ -76,40 +58,15 @@ public class ReportService: IReportService
         };
         var id = await _reportRepository.CreateReport(report);
         var message = new ReportCreateEvent(id, eventDateFrom, eventDateTo, eventTypes,report.Status);
-        await _publisher.PublishAsync(_exchangeName, _routingKey, message);
-        await _cacheService.InvalidateCache(_cacheVersion);
+        await _publisher.PublishAsync(_reportsExchangeName, _reportsRoutingKey, message);
+        await _cacheService.InvalidateCache(_reportsCacheVersionKey);
         return report;
-    }
-
-    public async Task GenerateReport(Guid reportId, DateOnly? periodFrom, 
-        DateOnly? periodTo, string[] eventTypes)
-    {
-        var report = await _reportRepository.GetReportById(reportId);
-        var logs = await _activityLogRepository.GetLogsAsync(
-            periodFrom, periodTo, eventTypes);
-        try
-        {
-            var reportResult = _reportGenerateService.GenerateReport(reportId, logs);
-            await _fileStorageService.UploadFileAsync(_minioOptions.ReportsBucketName,
-                reportResult.FileName, reportResult.Content, reportResult.ContentType);
-            var fileName = reportResult.FileName.Split('/')[^1];
-            report.MarkAsGenerated(fileName);
-            await _reportRepository.UpdateReport(reportId,report);
-            await _cacheService.InvalidateCache(_cacheVersion);
-        }
-        catch (Exception)
-        {
-            report.Status = ReportStatus.Error;
-            await _reportRepository.UpdateReport(reportId,report);
-            await _cacheService.InvalidateCache(_cacheVersion);
-            throw;
-        }
     }
 
     public async Task<IReadOnlyList<Report>> GetListOfReadyReports()
     {
-        var cacheVersion = await _cacheService.GetCurrentCacheVersion(_cacheVersion);
-        var cacheKey = _cacheService.GenerateCacheKey(_reportsListPrefix, cacheVersion, null);
+        var cacheVersion = await _cacheService.GetCurrentCacheVersion(_reportsCacheVersionKey);
+        var cacheKey = _cacheService.GenerateCacheKey(_reportsListCachePrefix, cacheVersion, null);
         var cachedResult = await _cacheService.GetAsync<IReadOnlyList<Report>>(cacheKey);
         if (cachedResult != null)
         {
@@ -121,7 +78,7 @@ public class ReportService: IReportService
         await _cacheService.SetAsync(
             cacheKey,
             reports,
-            TimeSpan.FromMinutes(_reportsListTtlInMinutes));
+            TimeSpan.FromMinutes(_reportsListCacheTtlInMinutes));
 
         return reports;
         
@@ -133,7 +90,7 @@ public class ReportService: IReportService
         var generatedDate = report.GeneratedAt ?? DateTime.UtcNow;
         var fileName = $"{generatedDate.Year}/{generatedDate.Month}/{reportName}";
         var filePath = await _fileStorageService.GetFileLinkAsync(
-            _minioOptions.ReportsBucketName, fileName);
+           _reportsBucketName, fileName);
         report.FilePath = filePath;
         await _reportRepository.UpdateReport(id,report);
         return filePath;

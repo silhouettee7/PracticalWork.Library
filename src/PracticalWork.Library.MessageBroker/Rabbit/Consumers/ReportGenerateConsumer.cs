@@ -6,13 +6,13 @@ using PracticalWork.Library.MessageBroker.Rabbit.Abstractions;
 
 namespace PracticalWork.Library.MessageBroker.Rabbit.Consumers;
 
-public class ReportGenerateConsumer: RabbitMQConsumer<ReportCreateEvent>
+public class ReportGenerateConsumer: RabbitMConsumer<ReportCreateEvent>
 {
     private readonly IServiceScopeFactory _serviceScopeFactory;
     
     public ReportGenerateConsumer(
-        ILogger<RabbitMQConsumer<ReportCreateEvent>> logger, 
-        IRabbitMQChannelPool channelPool, 
+        ILogger<RabbitMConsumer<ReportCreateEvent>> logger, 
+        IRabbitMqChannelPool channelPool, 
         IServiceScopeFactory serviceScopeFactory) : base(logger, channelPool)
     {
         _serviceScopeFactory = serviceScopeFactory;
@@ -21,7 +21,7 @@ public class ReportGenerateConsumer: RabbitMQConsumer<ReportCreateEvent>
     protected override async Task ProcessMessageAsync(ReportCreateEvent? messageObject)
     {
         var scope = _serviceScopeFactory.CreateScope();
-        var reportService = scope.ServiceProvider.GetRequiredService<IReportService>();
+        var reportService = scope.ServiceProvider.GetRequiredService<IConsumerService>();
         if (messageObject is { Source: "report-service" })
         {
             await reportService.GenerateReport(

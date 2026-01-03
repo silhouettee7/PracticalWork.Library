@@ -1,38 +1,45 @@
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using PracticalWork.Library.Abstractions.MessageBroker;
 using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Events;
 using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Models;
+using PracticalWork.Library.Options;
 
 namespace PracticalWork.Library.Services;
 
 public class ReaderService: IReaderService
 {
     private readonly IReaderRepository _readerRepository;
-    private readonly IRabbitMQPublisher _publisher;
+    private readonly IRabbitMqPublisher _publisher;
     private readonly ICacheService _cacheService;
-    private readonly string _readerBooksPrefix;
-    private readonly double _readerBooksTtlInMinutes;
-    private readonly string _readersCacheVersion;
-    private readonly IConfigurationSection _rabbitLibrarySection;
-    private readonly string _exchangeName;
+    private readonly string _readerBooksCachePrefix;
+    private readonly double _readerBooksCacheTtlInMinutes;
+    private readonly string _readersCacheVersionKey;
+    private readonly string _readerCreateRoutingKey;
+    private readonly string _readerCloseRoutingKey;
+    private readonly string _libraryExchangeName;
     
     public ReaderService(IReaderRepository repository,
-        IConfiguration configuration,
         ICacheService cacheService,
-        IRabbitMQPublisher publisher)
+        IRabbitMqPublisher publisher,
+        IOptionsMonitor<RabbitOptions> rabbitOptions,
+        IOptionsMonitor<RedisOptions> redisOptions)
     {
         _readerRepository = repository;
         _cacheService = cacheService;
-        var section = configuration.GetSection("App:Redis:Readers");
-        _readersCacheVersion = section["VersionKey"];
-        _readerBooksPrefix = section["ReaderBooks:Prefix"];
-        _readerBooksTtlInMinutes = section.GetValue<double>("ReaderBooks:TtlInMinutes");
-        _rabbitLibrarySection = configuration.GetSection("App:RabbitMQ:Library");
-        _exchangeName = _rabbitLibrarySection["ExchangeName"];
         _publisher = publisher;
+        var redisOpt = redisOptions.CurrentValue;
+        var rabbitOpt = rabbitOptions.CurrentValue;
+    
+        _readersCacheVersionKey = redisOpt.Readers.VersionKey;
+        _readerBooksCachePrefix = redisOpt.Readers.ReaderBooks.Prefix;
+        _readerBooksCacheTtlInMinutes = redisOpt.Readers.ReaderBooks.TtlInMinutes;
+        _libraryExchangeName = rabbitOpt.Library.ExchangeName;
+        _readerCreateRoutingKey = rabbitOpt.Library.ReaderCreate.RoutingKey;
+        _readerCloseRoutingKey = rabbitOpt.Library.ReaderClose.RoutingKey;
     }
     public async Task<Guid> CreateReader(Reader reader)
     {
@@ -45,8 +52,8 @@ public class ReaderService: IReaderService
         var message = new ReaderCreatedEvent(id, reader.FullName,
             reader.PhoneNumber, reader.ExpiryDate, DateTime.UtcNow);
         await _publisher.PublishAsync(
-            _exchangeName, 
-            _rabbitLibrarySection["ReaderCreate:RoutingKey"], 
+            _libraryExchangeName, 
+            _readerCreateRoutingKey, 
             message);
         return id;
     }
@@ -81,16 +88,16 @@ public class ReaderService: IReaderService
         var message = new ReaderClosedEvent(id, readerWithBorrowBooks.FullName,
             DateTime.UtcNow, "Вызван метод закрытия карточки");
         await _publisher.PublishAsync(
-            _exchangeName, 
-            _rabbitLibrarySection["CloseReader:RoutingKey"], 
+            _libraryExchangeName, 
+            _readerCloseRoutingKey, 
             message);
         return (false, readerWithBorrowBooks.BorrowBooks);
     }
 
     public async Task<IReadOnlyList<BorrowedBook>> GetAllBorrowBooks(Guid readerId)
     {
-        var cacheVersion = await _cacheService.GetCurrentCacheVersion(_readersCacheVersion);
-        var cacheKey = _cacheService.GenerateCacheKey(_readerBooksPrefix, cacheVersion, null);
+        var cacheVersion = await _cacheService.GetCurrentCacheVersion(_readersCacheVersionKey);
+        var cacheKey = _cacheService.GenerateCacheKey(_readerBooksCachePrefix, cacheVersion, null);
         var cachedResult = await _cacheService.GetAsync<IReadOnlyList<BorrowedBook>>(cacheKey);
         if (cachedResult != null)
         {
@@ -105,7 +112,7 @@ public class ReaderService: IReaderService
         await _cacheService.SetAsync(
             cacheKey, 
             result.books, 
-            TimeSpan.FromMinutes(_readerBooksTtlInMinutes));
+            TimeSpan.FromMinutes(_readerBooksCacheTtlInMinutes));
         return result.books;
     }
 }

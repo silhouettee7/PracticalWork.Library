@@ -8,16 +8,16 @@ using RabbitMQ.Client.Events;
 
 namespace PracticalWork.Library.MessageBroker.Rabbit.Abstractions;
 
-public abstract class RabbitMQConsumer<T>: IRabbitMQConsumer where T: BaseEvent
+public abstract class RabbitMConsumer<T>: IRabbitMqConsumer where T: BaseEvent
 {
     private IChannel? _channel;
     private string? _consumerTag;
-    private readonly IRabbitMQChannelPool _channelPool;
-    protected readonly ILogger<RabbitMQConsumer<T>> _logger;
+    private readonly IRabbitMqChannelPool _channelPool;
+    protected readonly ILogger<RabbitMConsumer<T>> _logger;
 
-    protected RabbitMQConsumer(
-        ILogger<RabbitMQConsumer<T>> logger,
-        IRabbitMQChannelPool channelPool)
+    protected RabbitMConsumer(
+        ILogger<RabbitMConsumer<T>> logger,
+        IRabbitMqChannelPool channelPool)
     {
         _logger = logger;
         _channelPool = channelPool;

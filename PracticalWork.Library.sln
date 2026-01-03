@@ -39,6 +39,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PracticalWork.Library.Messa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PracticalWork.Library.Reports.PostgreSql", "src\PracticalWork.Library.Reports.PostgreSql\PracticalWork.Library.Reports.PostgreSql.csproj", "{6808D94B-30EE-42CF-8BB1-42B6C5298634}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PracticalWork.Library.Worker.Consumers", "src\PracticalWork.Library.Worker.Consumers\PracticalWork.Library.Worker.Consumers.csproj", "{9FF0661C-E724-4419-A524-CB4DD25ADEE5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +87,10 @@ Global
 		{6808D94B-30EE-42CF-8BB1-42B6C5298634}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6808D94B-30EE-42CF-8BB1-42B6C5298634}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6808D94B-30EE-42CF-8BB1-42B6C5298634}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FF0661C-E724-4419-A524-CB4DD25ADEE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FF0661C-E724-4419-A524-CB4DD25ADEE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FF0661C-E724-4419-A524-CB4DD25ADEE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FF0661C-E724-4419-A524-CB4DD25ADEE5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -101,6 +107,7 @@ Global
 		{C340B6F8-F230-A5B4-337D-6191E887F844} = {5EF1ADE2-5A1C-434E-83B7-32EFF5DF0A11}
 		{1FB38F83-9E91-467E-90B3-5DC4F3D50022} = {5EF1ADE2-5A1C-434E-83B7-32EFF5DF0A11}
 		{6808D94B-30EE-42CF-8BB1-42B6C5298634} = {5EF1ADE2-5A1C-434E-83B7-32EFF5DF0A11}
+		{9FF0661C-E724-4419-A524-CB4DD25ADEE5} = {7E366027-D18D-45C9-928C-D527C6271DC9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C42A2C9B-25DC-4CF3-8FF1-E3CE64B080D6}

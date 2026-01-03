@@ -8,7 +8,7 @@ using PracticalWork.Library.MessageBroker.Rabbit.Consumers;
 using PracticalWork.Library.MessageBroker.Rabbit.Publishers;
 using PracticalWork.Library.MessageBroker.Rabbit.Utils;
 using PracticalWork.Library.MessageBroker.Workers;
-using RabbitMQ.Client;
+using PracticalWork.Library.Options;
 
 namespace PracticalWork.Library.MessageBroker;
 
@@ -19,37 +19,56 @@ public static class Entry
     /// </summary>
     public static IServiceCollection AddMessageBroker(this IServiceCollection serviceCollection, IConfiguration configuration)
     {
-        var librarySection = configuration.GetSection("App:RabbitMQ:Library");
-        var bookCreateQueue = librarySection["BookCreate:QueueName"];
-        var bookArchiveQueue = librarySection["BookArchive:QueueName"];
-        var bookBorrowQueue = librarySection["BookBorrow:QueueName"];
-        var bookReturnQueue = librarySection["BookReturn:QueueName"];
-        var readerCreateQueue = librarySection["ReaderCreate:QueueName"];
-        var readerCloseQueue = librarySection["ReaderClose:QueueName"];
-        var reportsSection = configuration.GetSection("App:RabbitMQ:Reports");
-        var reportQueue = reportsSection["QueueName"];
+        serviceCollection.Configure<RabbitOptions>(
+            configuration.GetSection("App:RabbitMQ"));
+        serviceCollection.AddSingleton<RabbitMqChannelPool>();
+        serviceCollection.AddSingleton<IRabbitMqChannelPool, RabbitMqChannelPool>(
+            sp => sp.GetRequiredService<RabbitMqChannelPool>());
+        serviceCollection.AddSingleton<IInitializable, RabbitMqChannelPool>(
+            sp => sp.GetRequiredService<RabbitMqChannelPool>());
+        serviceCollection.AddSingleton<RabbitMqSetupService>();
+        serviceCollection.AddHostedService<SetupRabbitWorker>();
+        return serviceCollection;
+    }
+    
+    /// <summary>
+    /// Регистрация продюсерской части
+    /// </summary>
+    public static IServiceCollection AddProducing(this IServiceCollection serviceCollection)
+    {
+        serviceCollection.AddScoped<IRabbitMqPublisher, RabbitMqPublisher>();
+        return serviceCollection;
+    }
+    
+    /// <summary>
+    /// Регистрация консьюмерской части по умолчанию
+    /// </summary>
+    public static IServiceCollection AddDefaultConsuming(this IServiceCollection serviceCollection, IConfiguration configuration)
+    {
+        var options = configuration.GetSection("App:RabbitMQ").Get<RabbitOptions>() ?? new RabbitOptions();
+        var librarySection = options.Library;
+        var bookCreateQueue = librarySection.BookCreate.QueueName;
+        var bookArchiveQueue = librarySection.BookArchive.QueueName;
+        var bookBorrowQueue = librarySection.BookBorrow.QueueName;
+        var bookReturnQueue = librarySection.BookReturn.QueueName;
+        var readerCreateQueue = librarySection.ReaderCreate.QueueName;
+        var readerCloseQueue = librarySection.ReaderClose.QueueName;
+        var reportQueue = options.Reports.QueueName;
         serviceCollection
-            .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<BookCreatedEvent>>(bookCreateQueue);
+            .AddKeyedSingleton<IRabbitMqConsumer, SystemActivityConsumer<BookCreatedEvent>>(bookCreateQueue);
         serviceCollection
-            .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<BookArchivedEvent>>(bookArchiveQueue);
+            .AddKeyedSingleton<IRabbitMqConsumer, SystemActivityConsumer<BookArchivedEvent>>(bookArchiveQueue);
         serviceCollection
-            .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<BookReturnedEvent>>(bookReturnQueue);
+            .AddKeyedSingleton<IRabbitMqConsumer, SystemActivityConsumer<BookReturnedEvent>>(bookReturnQueue);
         serviceCollection
-            .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<BookBorrowedEvent>>(bookBorrowQueue);
+            .AddKeyedSingleton<IRabbitMqConsumer, SystemActivityConsumer<BookBorrowedEvent>>(bookBorrowQueue);
         serviceCollection
-            .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<ReaderCreatedEvent>>(readerCreateQueue);
+            .AddKeyedSingleton<IRabbitMqConsumer, SystemActivityConsumer<ReaderCreatedEvent>>(readerCreateQueue);
         serviceCollection
-            .AddKeyedSingleton<IRabbitMQConsumer, SystemActivityConsumer<ReaderClosedEvent>>(readerCloseQueue);
+            .AddKeyedSingleton<IRabbitMqConsumer, SystemActivityConsumer<ReaderClosedEvent>>(readerCloseQueue);
         serviceCollection
-            .AddKeyedSingleton<IRabbitMQConsumer, ReportGenerateConsumer>(reportQueue);
-        serviceCollection.AddScoped<IRabbitMQPublisher, RabbitMQPublisher>();
-        serviceCollection.AddSingleton<RabbitMQChannelPool>();
-        serviceCollection.AddSingleton<IRabbitMQChannelPool, RabbitMQChannelPool>(
-            sp => sp.GetRequiredService<RabbitMQChannelPool>());
-        serviceCollection.AddSingleton<IInitializable, RabbitMQChannelPool>(
-            sp => sp.GetRequiredService<RabbitMQChannelPool>());
-        serviceCollection.AddSingleton<RabbitMQSetupService>();
-        serviceCollection.AddHostedService<ConsumersBackgroundService>();
+            .AddKeyedSingleton<IRabbitMqConsumer, ReportGenerateConsumer>(reportQueue);
+        serviceCollection.AddHostedService<DefaultConsumersBackgroundService>();
         return serviceCollection;
     }
 }

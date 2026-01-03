@@ -1,5 +1,3 @@
-using System.ComponentModel;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using PracticalWork.Library.Abstractions.MessageBroker;
 using PracticalWork.Library.Abstractions.Services;
@@ -21,26 +19,28 @@ public class LibraryService: ILibraryService
     private readonly IFileStorageService _fileStorageService;
     private readonly ICursorPaginationService<Book> _bookPaginationService;
     private readonly ICacheService _cacheService;
-    private readonly IRabbitMQPublisher _publisher;
-    private readonly MinioOptions _minioOptions;
-    private readonly string _booksCacheVersion;
-    private readonly string _libraryBooksPrefix;
-    private readonly double _libraryBooksTtlInMinutes;
-    private readonly string _booksDetailsPrefix;
-    private readonly double _booksDetailsTtlInMinutes;
-    private readonly string _readersCacheVersion;
-    private readonly IConfigurationSection _rabbitLibrarySection;
-    private readonly string _exchangeName;
+    private readonly IRabbitMqPublisher _publisher;
+    private readonly string _booksCacheVersionKey;
+    private readonly string _libraryBooksCachePrefix;
+    private readonly double _libraryBooksCacheTtlInMinutes;
+    private readonly string _booksDetailsCachePrefix;
+    private readonly double _booksDetailsCacheTtlInMinutes;
+    private readonly string _readersCacheVersionKey;
+    private readonly string _libraryExchangeName;
+    private readonly string _bookBorrowRoutingKey;
+    private readonly string _bookReturnRoutingKey;
+    private readonly string _coversBucketName;
     
     public LibraryService(IReaderRepository readerRepository, 
         IBookRepository bookRepository,
         IBorrowRepository borrowRepository,
         IFileStorageService fileStorageService,
         ICursorPaginationService<Book> bookPaginationService,
-        IRabbitMQPublisher publisher,
+        IRabbitMqPublisher publisher,
         ICacheService cacheService,
-        IConfiguration configuration,
-        IOptionsMonitor<MinioOptions> minioOptions)
+        IOptionsMonitor<MinioOptions> minioOptions,
+        IOptionsMonitor<RabbitOptions> rabbitOptions,
+        IOptionsMonitor<RedisOptions> redisOptions)
     {
         _readerRepository = readerRepository;
         _bookRepository = bookRepository;
@@ -49,16 +49,20 @@ public class LibraryService: ILibraryService
         _bookPaginationService = bookPaginationService;
         _cacheService = cacheService;
         _publisher = publisher;
-        _minioOptions = minioOptions.CurrentValue;
-        var section = configuration.GetSection("App:Redis:Books");
-        _booksCacheVersion = section["VersionKey"];
-        _libraryBooksPrefix = section["LibraryBooks:Prefix"];
-        _libraryBooksTtlInMinutes = section.GetValue<double>("LibraryBooks:TtlInMinutes");
-        _booksDetailsPrefix = section["BookDetails:Prefix"];
-        _booksDetailsTtlInMinutes = section.GetValue<double>("BookDetails:TtlInMinutes");
-        _readersCacheVersion = configuration["App:Redis:Readers:VersionKey"];
-        _rabbitLibrarySection = configuration.GetSection("App:RabbitMQ:Library");
-        _exchangeName = _rabbitLibrarySection["ExchangeName"];
+        var minioOpt = minioOptions.CurrentValue;
+        var redisOpt = redisOptions.CurrentValue;
+        var rabbitOpt = rabbitOptions.CurrentValue;
+        
+        _booksCacheVersionKey = redisOpt.Books.VersionKey;
+        _libraryBooksCachePrefix = redisOpt.Books.LibraryBooks.Prefix;
+        _libraryBooksCacheTtlInMinutes = redisOpt.Books.LibraryBooks.TtlInMinutes;
+        _booksDetailsCachePrefix = redisOpt.Books.BookDetails.Prefix;
+        _booksDetailsCacheTtlInMinutes = redisOpt.Books.BookDetails.TtlInMinutes;
+        _readersCacheVersionKey = redisOpt.Readers.VersionKey;
+        _libraryExchangeName = rabbitOpt.Library.ExchangeName;
+        _bookBorrowRoutingKey = rabbitOpt.Library.BookBorrow.RoutingKey;
+        _bookReturnRoutingKey = rabbitOpt.Library.BookReturn.RoutingKey;
+        _coversBucketName = minioOpt.CoversBucketName;
     }
     
     public async Task BorrowBook(Guid bookId, Guid readerId)
@@ -81,11 +85,11 @@ public class LibraryService: ILibraryService
         var message = new BookBorrowedEvent(bookId, readerId, bookBorrow.Book.Title, 
             reader.FullName, bookBorrow.BorrowDate, bookBorrow.DueDate );
         await _publisher.PublishAsync(
-            _exchangeName,
-            _rabbitLibrarySection["BookBorrow:RoutingKey"],
+            _libraryExchangeName,
+            _bookBorrowRoutingKey,
             message);
-        await _cacheService.InvalidateCache(_booksCacheVersion);
-        await _cacheService.InvalidateCache(_readersCacheVersion);
+        await _cacheService.InvalidateCache(_booksCacheVersionKey);
+        await _cacheService.InvalidateCache(_readersCacheVersionKey);
     }
 
     public async Task ReturnBook(Guid bookId, Guid readerId)
@@ -97,11 +101,11 @@ public class LibraryService: ILibraryService
         var message = new BookReturnedEvent(bookId, readerId, bookBorrow.Book.Title, 
             reader.FullName, bookBorrow.ReturnDate);
         await _publisher.PublishAsync(
-            _exchangeName, 
-            _rabbitLibrarySection["BookReturn:RoutingKey"], 
+            _libraryExchangeName, 
+            _bookReturnRoutingKey, 
             message);
-        await _cacheService.InvalidateCache(_booksCacheVersion);
-        await _cacheService.InvalidateCache(_readersCacheVersion);
+        await _cacheService.InvalidateCache(_booksCacheVersionKey);
+        await _cacheService.InvalidateCache(_readersCacheVersionKey);
     }
 
     public async Task<BookDetailsDto> GetBookDetails(Guid bookId)
@@ -118,8 +122,8 @@ public class LibraryService: ILibraryService
 
     public async Task<CursorPaginationResponse<Book>> GetNonArchivedBooksPage(CursorPaginationRequest request)
     {
-        var cacheVersion = await _cacheService.GetCurrentCacheVersion(_booksCacheVersion);
-        var cacheKey = _cacheService.GenerateCacheKey(_libraryBooksPrefix, cacheVersion, request);
+        var cacheVersion = await _cacheService.GetCurrentCacheVersion(_booksCacheVersionKey);
+        var cacheKey = _cacheService.GenerateCacheKey(_libraryBooksCachePrefix, cacheVersion, request);
         var cachedResult = await _cacheService.GetAsync<CursorPaginationResponse<Book>>(cacheKey);
         if (cachedResult != null)
         {
@@ -133,15 +137,15 @@ public class LibraryService: ILibraryService
         await _cacheService.SetAsync(
             cacheKey,
             cursorResponse,
-            TimeSpan.FromMinutes(_libraryBooksTtlInMinutes));
+            TimeSpan.FromMinutes(_libraryBooksCacheTtlInMinutes));
             
         return cursorResponse;
     }
 
     private async Task<BookDetailsDto> GetBookDetails(Guid id, Book book)
     {
-        var cacheVersion = await _cacheService.GetCurrentCacheVersion(_booksCacheVersion);
-        var cacheKey = _cacheService.GenerateCacheKey(_booksDetailsPrefix, cacheVersion, null);
+        var cacheVersion = await _cacheService.GetCurrentCacheVersion(_booksCacheVersionKey);
+        var cacheKey = _cacheService.GenerateCacheKey(_booksDetailsCachePrefix, cacheVersion, null);
         var cachedResult = await _cacheService.GetAsync<BookDetailsDto>(cacheKey);
         if (cachedResult != null)
         {
@@ -149,7 +153,7 @@ public class LibraryService: ILibraryService
         }
         if (book.CoverImagePath is not null)
         {
-            book.CoverImagePath = await _fileStorageService.GetFileLinkAsync(_minioOptions.CoversBucketName,book.CoverImagePath);
+            book.CoverImagePath = await _fileStorageService.GetFileLinkAsync(_coversBucketName,book.CoverImagePath);
         }
         var dto = new BookDetailsDto
         {
@@ -159,7 +163,7 @@ public class LibraryService: ILibraryService
         await _cacheService.SetAsync(
             cacheKey,
             dto,
-            TimeSpan.FromMinutes(_booksDetailsTtlInMinutes));
+            TimeSpan.FromMinutes(_booksDetailsCacheTtlInMinutes));
         return dto;
     }
 }

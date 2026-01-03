@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using PracticalWork.Library.Abstractions.MessageBroker;
 using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Abstractions.Storage;
@@ -17,34 +16,40 @@ public sealed class BookService : IBookService
     private readonly ICursorPaginationService<Book> _bookPaginationService;
     private readonly IFileStorageService _fileStorageService;
     private readonly ICacheService _cacheService;
-    private readonly IRabbitMQPublisher _publisher;
-    private readonly MinioOptions _minioOptions;
-    private readonly string _cacheVersion;
-    private readonly string _booksListPrefix;
-    private readonly double _cacheTtlInMinutes;
-    private readonly IConfigurationSection _rabbitLibrarySection;
-    private readonly string _exchangeName;
+    private readonly IRabbitMqPublisher _publisher;
+    private readonly string _booksCacheVersionKey;
+    private readonly string _booksListCachePrefix;
+    private readonly double _booksListCacheTtlInMinutes;
+    private readonly string _coversBucketName;
+    private readonly string _libraryExchangeName;
+    private readonly string _bookCreateRoutingKey;
+    private readonly string _bookArchiveRoutingKey;
 
     public BookService(IBookRepository bookRepository, 
         ICursorPaginationService<Book> paginationService,
         IFileStorageService fileStorageService,
         ICacheService cacheService,
-        IRabbitMQPublisher publisher,
-        IConfiguration configuration,
-        IOptionsMonitor<MinioOptions> minioOptions)
+        IRabbitMqPublisher publisher,
+        IOptionsMonitor<MinioOptions> minioOptions,
+        IOptionsMonitor<RabbitOptions> rabbitOptions,
+        IOptionsMonitor<RedisOptions> redisOptions)
     {
         _bookRepository = bookRepository;
         _bookPaginationService = paginationService;
         _fileStorageService = fileStorageService;
         _cacheService = cacheService;
         _publisher = publisher;
-        _minioOptions = minioOptions.CurrentValue;
-        var section = configuration.GetSection("App:Redis:Books");
-        _cacheVersion = section["VersionKey"];
-        _booksListPrefix = section["BooksList:Prefix"];
-        _cacheTtlInMinutes = section.GetValue<double>("BooksList:TtlInMinutes");
-        _rabbitLibrarySection = configuration.GetSection("App:RabbitMQ:Library");
-        _exchangeName = _rabbitLibrarySection["ExchangeName"];
+        var minioOpt = minioOptions.CurrentValue;
+        var redisOpt = redisOptions.CurrentValue;
+        var rabbitOpt = rabbitOptions.CurrentValue;
+
+        _booksCacheVersionKey = redisOpt.Books.VersionKey;
+        _booksListCachePrefix = redisOpt.Books.BooksList.Prefix;
+        _booksListCacheTtlInMinutes = redisOpt.Books.BooksList.TtlInMinutes;
+        _bookCreateRoutingKey = rabbitOpt.Library.BookCreate.RoutingKey;
+        _bookArchiveRoutingKey = rabbitOpt.Library.BookArchive.RoutingKey;
+        _libraryExchangeName = rabbitOpt.Library.ExchangeName;
+        _coversBucketName = minioOpt.CoversBucketName;
     }
 
     public async Task<Guid> CreateBook(Book book)
@@ -58,8 +63,8 @@ public sealed class BookService : IBookService
                 book.Category.ToString(),
                 book.Authors.ToArray(),
                 book.Year);
-            await _publisher.PublishAsync(_exchangeName,_rabbitLibrarySection["BookCreate:RoutingKey"],message);
-            await _cacheService.InvalidateCache(_cacheVersion);
+            await _publisher.PublishAsync(_libraryExchangeName,_bookCreateRoutingKey,message);
+            await _cacheService.InvalidateCache(_booksCacheVersionKey);
             return bookId;
             
         }
@@ -80,7 +85,7 @@ public sealed class BookService : IBookService
         book.Update(updatedBook.Title, updatedBook.Description,
             updatedBook.Year, updatedBook.Authors);
         await _bookRepository.UpdateBook(id, book);
-        await _cacheService.InvalidateCache(_cacheVersion);
+        await _cacheService.InvalidateCache(_booksCacheVersionKey);
     }
 
     public async Task<BookArchive> ArchiveBook(Guid id)
@@ -97,18 +102,18 @@ public sealed class BookService : IBookService
         var message = new BookArchivedEvent(id, book.Title, 
             "Вызван метод архивации книги", response.ArchivedAt);
         await _publisher.PublishAsync(
-            _exchangeName, 
-            _rabbitLibrarySection["BookArchive:RoutingKey"], 
+            _libraryExchangeName, 
+           _bookArchiveRoutingKey, 
             message);
-        await _cacheService.InvalidateCache(_cacheVersion);
+        await _cacheService.InvalidateCache(_booksCacheVersionKey);
         return response;
     }
 
     public async Task<CursorPaginationResponse<Book>> GetBooksPage(CursorPaginationRequest request, BookStatus? status, BookCategory? category, string author)
     {
-        var cacheVersion = await _cacheService.GetCurrentCacheVersion(_cacheVersion);
+        var cacheVersion = await _cacheService.GetCurrentCacheVersion(_booksCacheVersionKey);
         var prms = new { category, author, status, request };
-        var cacheKey = _cacheService.GenerateCacheKey(_booksListPrefix, cacheVersion, prms);
+        var cacheKey = _cacheService.GenerateCacheKey(_booksListCachePrefix, cacheVersion, prms);
         var cachedResult = await _cacheService.GetAsync<CursorPaginationResponse<Book>>(cacheKey);
         if (cachedResult != null)
         {
@@ -121,7 +126,7 @@ public sealed class BookService : IBookService
         await _cacheService.SetAsync(
             cacheKey,
             paginationResponse,
-            TimeSpan.FromMinutes(_cacheTtlInMinutes));
+            TimeSpan.FromMinutes(_booksListCacheTtlInMinutes));
 
         return paginationResponse;
     }
@@ -131,10 +136,10 @@ public sealed class BookService : IBookService
         var book = await _bookRepository.GetBookById(bookId);
         var currentDate = DateTime.UtcNow;
         var fileName = $"book-covers/{currentDate.Year}/{currentDate.Month}/{bookId}";
-        await _fileStorageService.UploadFileAsync(_minioOptions.CoversBucketName,fileName, coverImageStream, contentType);
+        await _fileStorageService.UploadFileAsync(_coversBucketName,fileName, coverImageStream, contentType);
         book.Description = description;
         book.CoverImagePath = fileName;
         await _bookRepository.UpdateBook(bookId, book);
-        await _cacheService.InvalidateCache(_cacheVersion);
+        await _cacheService.InvalidateCache(_booksCacheVersionKey);
     }
 }

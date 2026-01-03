@@ -1,29 +1,27 @@
-using System.Reflection;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using PracticalWork.Library.Events;
-using PracticalWork.Library.MessageBroker.Configuration.Models;
+using Microsoft.Extensions.Options;
 using PracticalWork.Library.MessageBroker.Rabbit.Abstractions;
+using PracticalWork.Library.Options;
 using RabbitMQ.Client;
 
 namespace PracticalWork.Library.MessageBroker.Rabbit.Utils;
 
-public class RabbitMQSetupService
+public class RabbitMqSetupService
 {
-    private readonly IRabbitMQChannelPool _channelPool;
-    private readonly ILogger<RabbitMQSetupService> _logger;
-    private readonly IConfiguration _configuration;
+    private readonly IRabbitMqChannelPool _channelPool;
+    private readonly ILogger<RabbitMqSetupService> _logger;
+    private readonly RabbitOptions _rabbitOptions;
     private IChannel? _channel;
     public IReadOnlyList<string>? Queues { get; private set; }
     
-    public RabbitMQSetupService(
-        IRabbitMQChannelPool channelPool,
-        ILogger<RabbitMQSetupService> logger,
-        IConfiguration configuration)
+    public RabbitMqSetupService(
+        IRabbitMqChannelPool channelPool,
+        ILogger<RabbitMqSetupService> logger,
+        IOptionsMonitor<RabbitOptions> rabbitOptions)
     {
         _channelPool = channelPool;
         _logger = logger;
-        _configuration = configuration;
+        _rabbitOptions = rabbitOptions.CurrentValue;
     }
     
     public async Task SetupInfrastructureAsync()
@@ -31,14 +29,13 @@ public class RabbitMQSetupService
         try
         {
             _channel = await _channelPool.GetChannelAsync();
-            var rabbitSection = _configuration.GetSection("App:RabbitMQ");
 
-            var library = rabbitSection.GetSection("Library").Get<LibraryConfig>() ?? new();
-            var reports = rabbitSection.GetSection("Reports").Get<ReportsConfig>() ?? new();
+            var library = _rabbitOptions.Library;
+            var reports = _rabbitOptions.Reports;
             
-            await _channel.ExchangeDeclareAsync(library.ExchangeName , ExchangeType.Direct, durable: true);
+            await _channel.ExchangeDeclareAsync(library.ExchangeName , ExchangeType.Topic, durable: true);
 
-            var bindings = typeof(LibraryConfig)
+            var bindings = typeof(LibraryRabbitConfig)
                 .GetProperties()
                 .Where(p => p.PropertyType == typeof(QueueBindingConfig))
                 .Select(p => (QueueBindingConfig)p.GetValue(library)!);
@@ -80,6 +77,11 @@ public class RabbitMQSetupService
         {
             _logger.LogError(ex, "Ошибка настройки RabbitMQ инфраструктуры");
             throw;
+        }
+        finally
+        {
+            if (_channel != null)
+                _channelPool.ReturnChannel(_channel);
         }
     }
 }

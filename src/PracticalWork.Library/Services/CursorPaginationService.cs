@@ -4,6 +4,7 @@ using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.Services;
 
+
 public class CursorPaginationService<TModel>: ICursorPaginationService<TModel>  where TModel : ICursor
 {
     public CursorPaginationResponse<TModel> ToCursorPageResponse(IReadOnlyList<TModel> page, CursorPaginationRequest request)

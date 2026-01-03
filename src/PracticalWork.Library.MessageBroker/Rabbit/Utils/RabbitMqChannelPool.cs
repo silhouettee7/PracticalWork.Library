@@ -1,37 +1,42 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using PracticalWork.Library.MessageBroker.Configuration.Abstractions;
 using PracticalWork.Library.MessageBroker.Rabbit.Abstractions;
+using PracticalWork.Library.Options;
 using RabbitMQ.Client;
 
 namespace PracticalWork.Library.MessageBroker.Rabbit.Utils;
 
-public class RabbitMQChannelPool: IRabbitMQChannelPool, IInitializable
+public class RabbitMqChannelPool: IRabbitMqChannelPool, IInitializable
 {
-    private readonly ILogger<RabbitMQChannelPool> _logger;
+    private readonly ILogger<RabbitMqChannelPool> _logger;
     private readonly ConcurrentBag<IChannel> _channelPool = [];
     private readonly ConnectionFactory _factory;
     private IConnection? _connection;
     private readonly string _appName;
     private readonly int _maxPoolSize;
     private readonly SemaphoreSlim _channelLock;
-    private List<IChannel> _consumersChannels = new();
+    private readonly List<IChannel> _consumersChannels = new();
     
-    public RabbitMQChannelPool(IConfiguration configuration, 
-        ILogger<RabbitMQChannelPool> logger)
+    public bool IsInitialized { get; set; }
+    
+    public RabbitMqChannelPool(IOptionsMonitor<RabbitOptions> rabbitOptionsMonitor, 
+        ILogger<RabbitMqChannelPool> logger)
     {
+        var options = rabbitOptionsMonitor.CurrentValue;
         var factory = new ConnectionFactory
         {
-            HostName = configuration["RabbitMQ:HostName"] ?? "localhost",
-            UserName = configuration["RabbitMQ:UserName"] ?? "guest",
-            Password = configuration["RabbitMQ:Password"] ?? "guest",
-            Port = configuration.GetValue("RabbitMQ:Port", 5672),
+            HostName = options.Host,
+            UserName = options.User,
+            Password = options.Password,
+            Port = options.Port,
         };
-        _appName = configuration["RabbitMQ:AppName"] ?? Guid.NewGuid().ToString();
+        _appName = options.AppName;
         _logger = logger;
         _factory = factory;
-        _maxPoolSize = configuration.GetValue("RabbitMQ:MaxChannelPoolSize", 10);
+        _maxPoolSize = options.MaxPoolSize;
         _channelLock = new SemaphoreSlim(_maxPoolSize, _maxPoolSize);
     }
 
@@ -44,8 +49,6 @@ public class RabbitMQChannelPool: IRabbitMQChannelPool, IInitializable
             return Task.CompletedTask;
         };
     }
-
-    public bool IsInit { get; set; }
 
     public async Task<IChannel> GetChannelAsync()
     {
