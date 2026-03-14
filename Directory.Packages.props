@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Packages -->
+    <PackageVersion Include="MailKit" Version="4.15.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
     <PackageVersion Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.8" />
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="9.0.8" />
