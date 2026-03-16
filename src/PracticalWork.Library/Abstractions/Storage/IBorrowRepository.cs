@@ -1,3 +1,4 @@
+using PracticalWork.Library.Dtos;
 using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.Abstractions.Storage;
@@ -29,4 +30,9 @@ public interface IBorrowRepository
     /// <param name="bookBorrow">объект выдачи</param>
     /// <returns></returns>
     Task ReturnBookBorrow(Guid bookBorrowId, BookBorrow bookBorrow);
+
+    Task<List<BorrowedIssuedBookInfoDto>> GetBorrowedIssuedBooksInfo(DateOnly from, DateOnly to,
+        DateTime dateToleranceMinutesAgo);
+
+    Task UpdateLastEmailSentAsync(Guid bookBorrowId);
 }

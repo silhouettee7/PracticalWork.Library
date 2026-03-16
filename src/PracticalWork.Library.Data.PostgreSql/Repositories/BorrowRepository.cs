@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Data.PostgreSql.Entities;
 using PracticalWork.Library.Data.PostgreSql.Extensions;
+using PracticalWork.Library.Dtos;
 using PracticalWork.Library.Enums;
 using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Models;
@@ -52,5 +53,33 @@ public class BorrowRepository: IBorrowRepository
         entity.Book.Status = bookBorrow.Book.Status;
         _appDbContext.BookBorrows.Update(entity);
         await _appDbContext.SaveChangesAsync();
+    }
+
+    public async Task<List<BorrowedIssuedBookInfoDto>> GetBorrowedIssuedBooksInfo(DateOnly from, DateOnly to, DateTime dateToleranceMinutesAgo)
+    {
+        return await _appDbContext.BookBorrows
+            .Include(b => b.Book)
+            .Include(b => b.Reader)
+            .Where(b => b.Status == BookIssueStatus.Issued &&
+                        b.DueDate <= to &&
+                        b.DueDate >= from &&
+                        (b.LastEmailSentAt == null || b.LastEmailSentAt.Value <= dateToleranceMinutesAgo ))
+            .Select(b => new BorrowedIssuedBookInfoDto
+            {
+                Id = b.Id,
+                ReaderFullName = b.Reader.FullName,
+                BookTitle = b.Book.Title,
+                Authors = b.Book.Authors,
+                DueDate = b.DueDate,
+            })
+            .ToListAsync();
+    }
+
+    public async Task UpdateLastEmailSentAsync(Guid bookBorrowId)
+    {
+        await _appDbContext.BookBorrows
+            .Where(b => b.Id == bookBorrowId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.LastEmailSentAt, DateTime.UtcNow));
     }
 }

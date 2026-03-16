@@ -1,9 +1,9 @@
-namespace PracticalWork.Library.Email.Configuration;
+namespace PracticalWork.Library.Options;
 
 /// <summary>
 /// Настройки SMTP сервера для отправки email уведомлений в системе библиотеки
 /// </summary>
-public class EmailSettings
+public class EmailOptions
 {
     /// <summary> Адрес SMTP сервера для отправки email </summary>
     public string SmtpServer { get; set; } = "localhost";

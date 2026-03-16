@@ -1,6 +1,6 @@
-using PracticalWork.Library.Email.Models;
+using PracticalWork.Library.Models;
 
-namespace PracticalWork.Library.Email.Abstractions;
+namespace PracticalWork.Library.Abstractions.Services;
 
 /// <summary>
 /// Сервис для отправки email сообщений в системе

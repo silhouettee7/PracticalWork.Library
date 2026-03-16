@@ -1,5 +1,6 @@
 ﻿using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Enums;
+using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.Data.PostgreSql.Entities;
 
@@ -25,6 +26,12 @@ public sealed class BookBorrowEntity : EntityBase
 
     /// <summary>Статус книги в библиотеке</summary>
     public BookIssueStatus Status { get; set; }
+    /// <summary>
+    /// Время последней отправки напоминания о возврате книги
+    /// </summary>
+
+    public DateTime? LastEmailSentAt { get; set; }
 
     public AbstractBookEntity Book { get; set; }
+    public Reader Reader { get; set; }
 }
