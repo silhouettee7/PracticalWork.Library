@@ -25,6 +25,9 @@ public class MinioOptions
     /// название бакета с обложками
     /// </summary>
     public string CoversBucketName { get; set; }
+
+    public string ArchiveBooksBucketName { get; set; }
+    public string ReportsAdministrationBucketName { get; set; }
     /// <summary>
     /// время истечения ссылки на файл
     /// </summary>

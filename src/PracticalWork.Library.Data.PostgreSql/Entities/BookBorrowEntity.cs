@@ -22,7 +22,7 @@ public sealed class BookBorrowEntity : EntityBase
     public DateOnly DueDate { get; set; }
 
     /// <summary>Фактическая дата возврата книги</summary>
-    public DateOnly ReturnDate { get; set; }
+    public DateOnly? ReturnDate { get; set; }
 
     /// <summary>Статус книги в библиотеке</summary>
     public BookIssueStatus Status { get; set; }

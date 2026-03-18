@@ -14,4 +14,5 @@ public interface IReportGenerateService
     /// <param name="logs">записи событий системы</param>
     /// <returns>объект сгенерированного отчета</returns>
     ReportGenerateResult GenerateReport(Guid reportId, IReadOnlyList<ActivityLog> logs);
+    ReportGenerateResult GenerateReport<T>(IEnumerable<T> items, string reportName);
 }

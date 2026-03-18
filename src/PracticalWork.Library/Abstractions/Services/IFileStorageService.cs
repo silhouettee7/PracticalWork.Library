@@ -23,4 +23,5 @@ public interface IFileStorageService
     /// <param name="cancellationToken">токен отмены</param>
     /// <returns>ссылка</returns>
     Task<string> GetFileLinkAsync(string bucket, string fileName, CancellationToken cancellationToken = default);
+    Task SetBucketFilesLifeTimeAsync(string bucket, DateTime deleteDate, string prefix, CancellationToken cancellationToken = default);
 }

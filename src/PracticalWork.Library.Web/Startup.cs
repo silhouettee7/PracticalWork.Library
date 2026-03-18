@@ -8,6 +8,7 @@ using PracticalWork.Library.Data.PostgreSql;
 using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Web.Configuration;
 using System.Text.Json.Serialization;
+using PracticalWork.Library.Email;
 using PracticalWork.Library.MessageBroker;
 using PracticalWork.Library.Reports.PostgreSql;
 
@@ -74,6 +75,7 @@ public class Startup
         services.AddBaseDomain();
         services.AddCache(Configuration);
         services.AddMinioFileStorage(Configuration);
+        services.AddEmail(Configuration);
         services
             .AddMessageBroker(Configuration)
             .AddProducing();

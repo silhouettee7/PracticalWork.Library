@@ -44,4 +44,6 @@ public interface IReaderRepository
     /// <param name="phone">телефон читателя</param>
     /// <returns>истина или ложб</returns>
     Task<bool> IsExistReader(string phone);
+
+    Task<int> GetNewReadersCount(DateTime startDate, DateTime endDate);
 }

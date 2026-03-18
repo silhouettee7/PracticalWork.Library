@@ -35,4 +35,5 @@ public interface IBorrowRepository
         DateTime dateToleranceMinutesAgo);
 
     Task UpdateLastEmailSentAsync(Guid bookBorrowId);
+    Task<BorrowBookStatisticDto> GetBorrowBookStatistic(DateOnly from, DateOnly to);
 }

@@ -35,6 +35,8 @@ public class Report
     /// Статус готовности отчета
     /// </summary>
     public ReportStatus Status { get; set; } = ReportStatus.InProgress;
+
+    public DateTime CreatedAt { get; set; }
     
     /// <summary>
     /// Пометить отчет как сгенерированный

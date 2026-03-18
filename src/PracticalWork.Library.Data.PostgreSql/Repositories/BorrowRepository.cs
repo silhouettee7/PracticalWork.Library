@@ -82,4 +82,18 @@ public class BorrowRepository: IBorrowRepository
             .ExecuteUpdateAsync(setters => setters
                 .SetProperty(x => x.LastEmailSentAt, DateTime.UtcNow));
     }
+
+    public async Task<BorrowBookStatisticDto> GetBorrowBookStatistic(DateOnly from, DateOnly to)
+    {
+        return await _appDbContext.BookBorrows
+            .GroupBy(b => 1)
+            .Select(g => new BorrowBookStatisticDto
+            {
+                BorrowedCount = g.Count(b => b.BorrowDate >= from && b.BorrowDate <= to),
+                ReturnedCount = g.Count(b => b.ReturnDate >= from && b.ReturnDate <= to),
+                OverdueCount = g.Count(b => b.DueDate >= from && b.DueDate <= to
+                                                                 && b.ReturnDate == null),
+            })
+            .FirstOrDefaultAsync();
+    }
 }

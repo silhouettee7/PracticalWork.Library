@@ -97,4 +97,18 @@ public class ReportRepository: IReportRepository
         reportEntity.FilePath = report.FilePath;
         await _context.SaveChangesAsync();
     }
+
+    public async Task SaveReportAsync(Report report)
+    {
+        var entity = new ReportEntity
+        {
+            Status = report.Status,
+            FilePath = report.FilePath,
+            Name = report.Name,
+            GeneratedAt = report.GeneratedAt,
+            CreatedAt = report.CreatedAt
+        };
+        await _context.Reports.AddAsync(entity);
+        await _context.SaveChangesAsync();
+    }
 }

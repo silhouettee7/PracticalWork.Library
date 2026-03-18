@@ -26,4 +26,6 @@ public interface IReportService
     /// <param name="reportName">название файла отчета</param>
     /// <returns>url файла</returns>
     Task<string> GetReportUrl(string reportName);
+
+    Task CreateReportForAdministration();
 }

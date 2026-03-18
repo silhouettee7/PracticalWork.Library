@@ -34,6 +34,7 @@
     <ProjectReference Include="..\PracticalWork.Library.Controllers\PracticalWork.Library.Controllers.csproj" />
     <ProjectReference Include="..\PracticalWork.Library.Data.Minio\PracticalWork.Library.Data.Minio.csproj" />
     <ProjectReference Include="..\PracticalWork.Library.Data.PostgreSql\PracticalWork.Library.Data.PostgreSql.csproj" />
+    <ProjectReference Include="..\PracticalWork.Library.Email\PracticalWork.Library.Email.csproj" />
     <ProjectReference Include="..\PracticalWork.Library.MessageBroker\PracticalWork.Library.MessageBroker.csproj" />
     <ProjectReference Include="..\PracticalWork.Library.Reports.PostgreSql\PracticalWork.Library.Reports.PostgreSql.csproj" />
     <ProjectReference Include="..\PracticalWork.Library\PracticalWork.Library.csproj" />

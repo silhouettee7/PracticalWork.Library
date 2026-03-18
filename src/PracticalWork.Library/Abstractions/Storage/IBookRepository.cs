@@ -1,4 +1,5 @@
-﻿using PracticalWork.Library.Enums;
+﻿using PracticalWork.Library.Dtos;
+using PracticalWork.Library.Enums;
 using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.Abstractions.Storage;
@@ -49,4 +50,7 @@ public interface IBookRepository
     /// <param name="request">объект пагинации</param>
     /// <returns>список книг</returns>
     Task<IReadOnlyList<Book>> GetNonArchivedBooksPageWithIssuanceRecords(CursorPaginationRequest request);
+
+    Task<List<AvailableOldBookDto>> GetAvailableOldBooksPage(CursorPaginationRequest request);
+    Task<int> GetAddedBooksCount(DateTime startDate, DateTime endDate);
 }

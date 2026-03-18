@@ -21,6 +21,9 @@ public static class Entry
         services.AddScoped<IReaderService, ReaderService>();
         services.AddScoped<IReportService, ReportService>();
         services.AddScoped<IActivityLogService, ActivityLogService>();
+        services.AddScoped<IArchiveService, ArchiveService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IReportGenerateService, ReportGenerateService>();
         return services;
     }
     

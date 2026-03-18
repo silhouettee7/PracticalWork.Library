@@ -27,7 +27,7 @@ public static class MapEntitiesExt
         new()
         {
             Status = entity.Status,
-            ReturnDate = entity.ReturnDate,
+            ReturnDate = entity.ReturnDate ?? default,
             DueDate = entity.DueDate,
             BorrowDate = entity.BorrowDate,
             Book = new Book

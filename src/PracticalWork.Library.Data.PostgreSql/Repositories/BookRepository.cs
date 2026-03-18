@@ -2,6 +2,7 @@
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Data.PostgreSql.Entities;
 using PracticalWork.Library.Data.PostgreSql.Extensions;
+using PracticalWork.Library.Dtos;
 using PracticalWork.Library.Enums;
 using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Extensions;
@@ -107,5 +108,29 @@ public sealed class BookRepository : IBookRepository
             .Select(e => e.ToBook());
         
         return await entities.ToListAsync();
+    }
+
+    public async Task<List<AvailableOldBookDto>> GetAvailableOldBooksPage(CursorPaginationRequest request)
+    {
+        var dateThreeYearsAgo = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-3));
+        return await _appDbContext.Books
+            .Include(b => b.IssuanceRecords)
+            .Where(b => b.Status == BookStatus.Available &&
+                        (b.IssuanceRecords.Count == 0 ||
+                        b.IssuanceRecords.All(r => r.BorrowDate < dateThreeYearsAgo)))
+            .CursorPage(request)
+            .Select(b => new AvailableOldBookDto
+            {
+                Id = b.Id,
+                Title = b.Title,
+            })
+            .ToListAsync();
+    }
+
+    public async Task<int> GetAddedBooksCount(DateTime startDate, DateTime endDate)
+    {
+        return await _appDbContext.Books
+            .Where(b => b.CreatedAt >= startDate && b.CreatedAt <= endDate)
+            .CountAsync();
     }
 }

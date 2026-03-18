@@ -104,8 +104,15 @@ public class ReaderRepository: IReaderRepository
                 DueDate = b.DueDate,
                 Status = b.Status,
                 BorrowDate = b.BorrowDate,
-                ReturnDate = b.ReturnDate
+                ReturnDate = b.ReturnDate ?? default
             })
             .ToList());
+    }
+
+    public async Task<int> GetNewReadersCount(DateTime startDate, DateTime endDate)
+    {
+        return await _appDbContext.Readers
+            .Where(r => r.CreatedAt >= startDate && r.CreatedAt <= endDate)
+            .CountAsync();
     }
 }

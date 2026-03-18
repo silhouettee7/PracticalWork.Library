@@ -37,4 +37,5 @@ public interface IReportRepository
     /// <param name="report">объект отчета</param>
     /// <returns>задача</returns>
     Task UpdateReport(Guid reportId,Report report);
+    Task SaveReportAsync(Report report);
 }
