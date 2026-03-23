@@ -44,10 +44,10 @@ public sealed class BookRepository : IBookRepository
         return entity.Id;
     }
 
-    public async Task<Book> GetBookById(Guid id)
+    public async Task<Book> GetBookById(Guid id, CancellationToken cancellationToken)
     {
         var bookEntity = await _appDbContext.Books
-            .SingleOrDefaultAsync(b => b.Id == id)
+            .SingleOrDefaultAsync(b => b.Id == id, cancellationToken: cancellationToken)
             ?? throw new EntityNotFoundException($"Книга с id:{id} не найдена");
         return bookEntity.ToBook();
     }
@@ -60,9 +60,9 @@ public sealed class BookRepository : IBookRepository
         return (bookEntity.Id,bookEntity.ToBook());
     }
 
-    public async Task UpdateBook(Guid id, Book book)
+    public async Task UpdateBook(Guid id, Book book, CancellationToken cancellationToken)
     {
-        var entity = await _appDbContext.Books.SingleOrDefaultAsync(b => b.Id == id) 
+        var entity = await _appDbContext.Books.SingleOrDefaultAsync(b => b.Id == id, cancellationToken: cancellationToken) 
                      ?? throw new EntityNotFoundException($"Книга с id:{id} не найдена");
         entity.Title = book.Title;
         entity.Description = book.Description;
@@ -75,7 +75,7 @@ public sealed class BookRepository : IBookRepository
             entity.CoverImagePath = book.CoverImagePath;
         }
         _appDbContext.Update(entity);
-        await _appDbContext.SaveChangesAsync();
+        await _appDbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<Book>> GetBooksPageFilteringByFields(
@@ -110,27 +110,29 @@ public sealed class BookRepository : IBookRepository
         return await entities.ToListAsync();
     }
 
-    public async Task<List<AvailableOldBookDto>> GetAvailableOldBooksPage(CursorPaginationRequest request)
+    public async Task<List<AvailableOldBookDto>> GetAvailableOldBooksPage(
+        DateOnly borrowDateTo, CursorPaginationRequest request, 
+        CancellationToken cancellationToken)
     {
-        var dateThreeYearsAgo = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-3));
         return await _appDbContext.Books
             .Include(b => b.IssuanceRecords)
             .Where(b => b.Status == BookStatus.Available &&
                         (b.IssuanceRecords.Count == 0 ||
-                        b.IssuanceRecords.All(r => r.BorrowDate < dateThreeYearsAgo)))
+                        b.IssuanceRecords.All(r => r.BorrowDate < borrowDateTo)))
             .CursorPage(request)
             .Select(b => new AvailableOldBookDto
             {
                 Id = b.Id,
                 Title = b.Title,
             })
-            .ToListAsync();
+            .ToListAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task<int> GetAddedBooksCount(DateTime startDate, DateTime endDate)
+    public async Task<int> GetAddedBooksCount(DateTime startDate, DateTime endDate, 
+        CancellationToken cancellationToken)
     {
         return await _appDbContext.Books
             .Where(b => b.CreatedAt >= startDate && b.CreatedAt <= endDate)
-            .CountAsync();
+            .CountAsync(cancellationToken: cancellationToken);
     }
 }

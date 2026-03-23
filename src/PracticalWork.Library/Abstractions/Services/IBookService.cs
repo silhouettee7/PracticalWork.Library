@@ -19,12 +19,14 @@ public interface IBookService
     /// <param name="book">книга с обновленными параметрами</param>
     /// <returns></returns>
     Task UpdateBook(Guid id, Book book);
+
     /// <summary>
     /// Архивирование книги
     /// </summary>
     /// <param name="id">идентификатор книги</param>
+    /// <param name="cancellationToken">токен отмены</param>
     /// <returns></returns>
-    Task<BookArchive> ArchiveBook(Guid id);
+    Task<BookArchive> ArchiveBook(Guid id, CancellationToken cancellationToken = default);
     /// <summary>
     /// Получить страницу с книгами
     /// </summary>

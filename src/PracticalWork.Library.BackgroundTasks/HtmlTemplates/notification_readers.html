@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Напоминание о возврате книги</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .email-content {
+            padding: 30px;
+        }
+
+        .header {
+            margin-bottom: 25px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 15px;
+        }
+
+        .header h1 {
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .greeting {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            color: #333333;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .book-info-block {
+            border: 1px solid #dee2e6;
+            background-color: #ffffff;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 6px;
+        }
+
+        .book-info-block h2 {
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 0 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .book-details {
+            margin-bottom: 15px;
+        }
+
+        .book-detail-item {
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .book-detail-label {
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            color: #495057;
+            display: inline-block;
+            min-width: 100px;
+        }
+
+        .book-detail-value {
+            font-family: Arial, sans-serif;
+            font-weight: normal;
+            color: #6c757d;
+        }
+        
+        .due-date-highlight {
+            background-color: #e8f5e9;
+            border-left: 4px solid #28a745;
+            padding: 12px 15px;
+            margin: 15px 0 10px 0;
+            border-radius: 4px;
+        }
+
+        .due-date-highlight .book-detail-label {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .due-date-highlight .book-detail-value {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .days-left {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            color: #28a745;
+            margin-top: 5px;
+        }
+        
+        .contacts-block {
+            margin-bottom: 25px;
+        }
+
+        .contacts-block h3 {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 0 0 12px 0;
+        }
+
+        .contacts-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .contacts-list li {
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            color: #495057;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .contacts-list li::before {
+            content: "•";
+            color: #007bff;
+            font-size: 16px;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        
+        .signature {
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            color: #6c757d;
+            font-style: italic;
+            margin-top: 25px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        /* Футер */
+        .footer {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            color: #adb5bd;
+            text-align: center;
+            background-color: #f8f9fa;
+            padding: 15px 20px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .footer p {
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #e9ecef;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 600px) {
+            .email-content {
+                padding: 20px;
+            }
+
+            .book-detail-label {
+                display: block;
+                margin-bottom: 4px;
+            }
+
+            .book-detail-item {
+                margin-bottom: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <div class="email-content">
+        <div class="header">
+            <h1>Напоминание о возврате книги: "{{BookTitle}}"</h1>
+        </div>
+
+        <div class="greeting">
+            Уважаемый(ая) {{ReaderFullName}}!
+        </div>
+        
+        <div class="book-info-block">
+            <h2>ИНФОРМАЦИЯ О КНИГЕ</h2>
+
+            <div class="book-details">
+                <div class="book-detail-item">
+                    <span class="book-detail-label">Название:</span>
+                    <span class="book-detail-value">{{BookTitle}}</span>
+                </div>
+                <div class="book-detail-item">
+                    <span class="book-detail-label">Автор(ы):</span>
+                    <span class="book-detail-value">{{Authors}}</span>
+                </div>
+                
+                <div class="due-date-highlight">
+                    <div class="book-detail-item">
+                        <span class="book-detail-label">Срок возврата:</span>
+                        <span class="book-detail-value">{{ReturnDate}}</span>
+                    </div>
+                    <div class="days-left">
+                        Осталось дней: {{DaysCountBeforeReturn}}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p style="font-family: Arial, sans-serif; font-size: 14px; color: #495057; line-height: 1.5; margin-bottom: 25px;">
+            Пожалуйста, верните книгу до указанной даты.
+        </p>
+        
+        <div class="contacts-block">
+            <h3>КОНТАКТЫ БИБЛИОТЕКИ</h3>
+            <ul class="contacts-list">
+                <li>Адрес: {{LibraryAddress}}</li>
+                <li>Телефон: {{LibraryPhoneNumber}}</li>
+                <li>Часы работы: {{OpeningHours}}</li>
+            </ul>
+        </div>
+
+        <div class="signature">
+            С уважением,<br>
+            Администрация библиотеки
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Это письмо было отправлено автоматически.</p>
+        <p>Если вы уже вернули книгу, проигнорируйте это сообщение.</p>
+    </div>
+</div>
+</body>
+</html>

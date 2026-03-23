@@ -8,8 +8,13 @@ internal sealed class BookBorrowConfiguration : EntityConfigurationBase<BookBorr
     public override void Configure(EntityTypeBuilder<BookBorrowEntity> builder)
     {
         builder.HasKey(e => e.Id);
+        
         builder.HasOne(e => e.Book)
             .WithMany(b => b.IssuanceRecords)
             .HasForeignKey(e => e.BookId);
+        
+        builder.HasOne(e => e.Reader)
+            .WithMany(e => e.BorrowedRecords)
+            .HasForeignKey(e => e.ReaderId);
     }
 }

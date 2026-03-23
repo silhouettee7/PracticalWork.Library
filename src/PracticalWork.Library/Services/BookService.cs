@@ -24,6 +24,7 @@ public sealed class BookService : IBookService
     private readonly string _libraryExchangeName;
     private readonly string _bookCreateRoutingKey;
     private readonly string _bookArchiveRoutingKey;
+    private readonly TimeProvider _timeProvider;
 
     public BookService(IBookRepository bookRepository, 
         ICursorPaginationService<Book> paginationService,
@@ -32,13 +33,14 @@ public sealed class BookService : IBookService
         IRabbitMqPublisher publisher,
         IOptionsMonitor<MinioOptions> minioOptions,
         IOptionsMonitor<RabbitOptions> rabbitOptions,
-        IOptionsMonitor<RedisOptions> redisOptions)
+        IOptionsMonitor<RedisOptions> redisOptions, TimeProvider timeProvider)
     {
         _bookRepository = bookRepository;
         _bookPaginationService = paginationService;
         _fileStorageService = fileStorageService;
         _cacheService = cacheService;
         _publisher = publisher;
+        _timeProvider = timeProvider;
         var minioOpt = minioOptions.CurrentValue;
         var redisOpt = redisOptions.CurrentValue;
         var rabbitOpt = rabbitOptions.CurrentValue;
@@ -88,23 +90,23 @@ public sealed class BookService : IBookService
         await _cacheService.InvalidateCache(_booksCacheVersionKey);
     }
 
-    public async Task<BookArchive> ArchiveBook(Guid id)
+    public async Task<BookArchive> ArchiveBook(Guid id, CancellationToken cancellationToken = default)
     {
-        var book = await _bookRepository.GetBookById(id);
+        var book = await _bookRepository.GetBookById(id, cancellationToken);
         book.Archive();
-        await _bookRepository.UpdateBook(id, book);
+        await _bookRepository.UpdateBook(id, book, cancellationToken);
         var response = new BookArchive
         {
             Id = id,
             Title = book.Title,
-            ArchivedAt = DateTime.UtcNow
+            ArchivedAt = _timeProvider.GetUtcNow().DateTime
         };
         var message = new BookArchivedEvent(id, book.Title, 
             "Вызван метод архивации книги", response.ArchivedAt);
         await _publisher.PublishAsync(
             _libraryExchangeName, 
            _bookArchiveRoutingKey, 
-            message);
+            message, cancellationToken);
         await _cacheService.InvalidateCache(_booksCacheVersionKey);
         return response;
     }
@@ -134,7 +136,7 @@ public sealed class BookService : IBookService
     public async Task AddBookDetails(Guid bookId, string description, Stream coverImageStream, string contentType)
     {
         var book = await _bookRepository.GetBookById(bookId);
-        var currentDate = DateTime.UtcNow;
+        var currentDate = _timeProvider.GetUtcNow().DateTime;
         var fileName = $"book-covers/{currentDate.Year}/{currentDate.Month}/{bookId}";
         await _fileStorageService.UploadFileAsync(_coversBucketName,fileName, coverImageStream, contentType);
         book.Description = description;

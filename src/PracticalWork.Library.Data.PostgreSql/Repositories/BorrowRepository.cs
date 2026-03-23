@@ -55,7 +55,8 @@ public class BorrowRepository: IBorrowRepository
         await _appDbContext.SaveChangesAsync();
     }
 
-    public async Task<List<BorrowedIssuedBookInfoDto>> GetBorrowedIssuedBooksInfo(DateOnly from, DateOnly to, DateTime dateToleranceMinutesAgo)
+    public async Task<List<BorrowedIssuedBookInfoDto>> GetBorrowedIssuedBooksInfo(
+        DateOnly from, DateOnly to, DateTime dateToleranceMinutesAgo, CancellationToken cancellationToken)
     {
         return await _appDbContext.BookBorrows
             .Include(b => b.Book)
@@ -72,18 +73,20 @@ public class BorrowRepository: IBorrowRepository
                 Authors = b.Book.Authors,
                 DueDate = b.DueDate,
             })
-            .ToListAsync();
+            .ToListAsync(cancellationToken: cancellationToken);
     }
 
-    public async Task UpdateLastEmailSentAsync(Guid bookBorrowId)
+    public async Task UpdateLastEmailSentAsync(Guid bookBorrowId, DateTime timestamp, CancellationToken cancellationToken)
     {
         await _appDbContext.BookBorrows
             .Where(b => b.Id == bookBorrowId)
             .ExecuteUpdateAsync(setters => setters
-                .SetProperty(x => x.LastEmailSentAt, DateTime.UtcNow));
+                .SetProperty(x => x.LastEmailSentAt, timestamp), 
+                cancellationToken: cancellationToken);
     }
 
-    public async Task<BorrowBookStatisticDto> GetBorrowBookStatistic(DateOnly from, DateOnly to)
+    public async Task<BorrowBookStatisticDto> GetBorrowBookStatistic(DateOnly from, DateOnly to,
+        CancellationToken cancellationToken)
     {
         return await _appDbContext.BookBorrows
             .GroupBy(b => 1)
@@ -94,6 +97,6 @@ public class BorrowRepository: IBorrowRepository
                 OverdueCount = g.Count(b => b.DueDate >= from && b.DueDate <= to
                                                                  && b.ReturnDate == null),
             })
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
     }
 }

@@ -33,5 +33,5 @@ public sealed class BookBorrowEntity : EntityBase
     public DateTime? LastEmailSentAt { get; set; }
 
     public AbstractBookEntity Book { get; set; }
-    public Reader Reader { get; set; }
+    public ReaderEntity Reader { get; set; }
 }

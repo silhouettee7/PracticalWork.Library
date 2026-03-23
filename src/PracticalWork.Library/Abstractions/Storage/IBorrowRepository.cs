@@ -32,8 +32,9 @@ public interface IBorrowRepository
     Task ReturnBookBorrow(Guid bookBorrowId, BookBorrow bookBorrow);
 
     Task<List<BorrowedIssuedBookInfoDto>> GetBorrowedIssuedBooksInfo(DateOnly from, DateOnly to,
-        DateTime dateToleranceMinutesAgo);
+        DateTime dateToleranceMinutesAgo, CancellationToken cancellationToken);
 
-    Task UpdateLastEmailSentAsync(Guid bookBorrowId);
-    Task<BorrowBookStatisticDto> GetBorrowBookStatistic(DateOnly from, DateOnly to);
+    Task UpdateLastEmailSentAsync(Guid bookBorrowId, DateTime timestamp, CancellationToken cancellationToken);
+    Task<BorrowBookStatisticDto> GetBorrowBookStatistic(DateOnly from, DateOnly to,
+        CancellationToken cancellationToken);
 }

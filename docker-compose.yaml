@@ -25,6 +25,18 @@ services:
     volumes:
       - postgres_reports_data:/var/lib/postgresql/data
   
+  postgres-hangfire:
+    image: postgres:latest
+    container_name: hangfire-postgres
+    environment:
+      POSTGRES_DB: hangfire
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5439:5432"
+    volumes:
+      - postgres_hangfire_data:/var/lib/postgresql/data
+      
   minio:
     image: minio/minio
     container_name: library-minio
@@ -59,15 +71,32 @@ services:
       - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+  
+  smtp4dev:
+    image: rnwood/smtp4dev:latest
+    container_name: smtp4dev
+    restart: unless-stopped
+    ports:
+      - "3000:80"   
+      - "25:25"      
+    volumes:
+      - smtp4dev-data:/app/data
+    environment:
+      - LOG_LEVEL=Info
+      - API_ENABLED=true
       
 volumes:
   postgres_library_data:
     driver: local
   postgres_reports_data:
     driver: local
+  postgres_hangfire_data:
+    driver: local
   redis_data:
     driver: local
   minio_data:
     driver: local
   rabbitmq_data:
+    driver: local
+  smtp4dev-data:
     driver: local

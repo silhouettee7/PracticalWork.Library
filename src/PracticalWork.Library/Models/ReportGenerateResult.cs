@@ -17,4 +17,6 @@ public class ReportGenerateResult
     /// Название файла отчета
     /// </summary>
     public string FileName { get; set; }
+
+    public DateTime GeneratedAt { get; set; }
 }

@@ -2,7 +2,7 @@ using PracticalWork.Library.Attributes;
 
 namespace PracticalWork.Library.Models;
 
-public class ReportForAdministration
+public class BooksStatistic
 {
     [TableColumn("Количество выданных книг")]
     public int BorrowedCount { get; set; } 

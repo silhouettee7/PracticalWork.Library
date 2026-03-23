@@ -21,9 +21,8 @@ public static class Entry
         services.AddScoped<IReaderService, ReaderService>();
         services.AddScoped<IReportService, ReportService>();
         services.AddScoped<IActivityLogService, ActivityLogService>();
-        services.AddScoped<IArchiveService, ArchiveService>();
-        services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IReportGenerateService, ReportGenerateService>();
+        
         return services;
     }
     
@@ -31,6 +30,19 @@ public static class Entry
     {
         services.AddScoped<IConsumerService, ConsumerService>();
         services.AddScoped<IReportGenerateService, ReportGenerateService>();
+        
+        return services;
+    }
+
+    public static IServiceCollection AddBackgroundTasksDomain(this IServiceCollection services)
+    {
+        services.AddScoped<IBookService, BookService>();
+        services.AddScoped<ICursorPaginationService<Book>, CursorPaginationService<Book>>();
+        services.AddScoped<IArchiveService, ArchiveService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IReportGenerateService, ReportGenerateService>();
+        services.AddScoped<IReportService, ReportService>();
+        
         return services;
     }
 }

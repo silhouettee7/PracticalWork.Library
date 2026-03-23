@@ -27,5 +27,5 @@ public interface IReportService
     /// <returns>url файла</returns>
     Task<string> GetReportUrl(string reportName);
 
-    Task CreateReportForAdministration();
+    Task CreateReportForAdministration(CancellationToken cancellationToken);
 }

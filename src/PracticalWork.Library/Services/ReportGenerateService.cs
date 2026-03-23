@@ -10,9 +10,16 @@ namespace PracticalWork.Library.Services;
 
 public class ReportGenerateService: IReportGenerateService
 {
+    private readonly TimeProvider _timeProvider;
+
+    public ReportGenerateService(TimeProvider timeProvider)
+    {
+        _timeProvider = timeProvider;
+    }
+
     public ReportGenerateResult GenerateReport(Guid reportId, IReadOnlyList<ActivityLog> logs)
     {
-        var timestamp = DateTime.UtcNow;
+        var timestamp = _timeProvider.GetUtcNow().DateTime;
         string fileName = $"{timestamp.Year}/{timestamp.Month}/{reportId}.csv";
         string contentType = "text/csv";
 
@@ -66,7 +73,8 @@ public class ReportGenerateService: IReportGenerateService
         {
             FileName = fileName,
             Content = stream,
-            ContentType = contentType
+            ContentType = contentType,
+            GeneratedAt = _timeProvider.GetUtcNow().DateTime
         };
     }
 }

@@ -21,16 +21,18 @@ public class ReaderService: IReaderService
     private readonly string _readerCreateRoutingKey;
     private readonly string _readerCloseRoutingKey;
     private readonly string _libraryExchangeName;
+    private readonly TimeProvider _timeProvider;
     
     public ReaderService(IReaderRepository repository,
         ICacheService cacheService,
         IRabbitMqPublisher publisher,
         IOptionsMonitor<RabbitOptions> rabbitOptions,
-        IOptionsMonitor<RedisOptions> redisOptions)
+        IOptionsMonitor<RedisOptions> redisOptions, TimeProvider timeProvider)
     {
         _readerRepository = repository;
         _cacheService = cacheService;
         _publisher = publisher;
+        _timeProvider = timeProvider;
         var redisOpt = redisOptions.CurrentValue;
         var rabbitOpt = rabbitOptions.CurrentValue;
     
@@ -50,7 +52,7 @@ public class ReaderService: IReaderService
         reader.IsActive = true;
         var id = await _readerRepository.CreateReader(reader);
         var message = new ReaderCreatedEvent(id, reader.FullName,
-            reader.PhoneNumber, reader.ExpiryDate, DateTime.UtcNow);
+            reader.PhoneNumber, reader.ExpiryDate, _timeProvider.GetUtcNow().DateTime);
         await _publisher.PublishAsync(
             _libraryExchangeName, 
             _readerCreateRoutingKey, 
@@ -83,10 +85,10 @@ public class ReaderService: IReaderService
             return (true, readerWithBorrowBooks.BorrowBooks);
         }
         readerWithBorrowBooks.IsActive = false;
-        readerWithBorrowBooks.ExpiryDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        readerWithBorrowBooks.ExpiryDate = DateOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime);
         await _readerRepository.UpdateReader(id, readerWithBorrowBooks);
         var message = new ReaderClosedEvent(id, readerWithBorrowBooks.FullName,
-            DateTime.UtcNow, "Вызван метод закрытия карточки");
+            _timeProvider.GetUtcNow().DateTime, "Вызван метод закрытия карточки");
         await _publisher.PublishAsync(
             _libraryExchangeName, 
             _readerCloseRoutingKey, 

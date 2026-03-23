@@ -12,7 +12,7 @@ public static class Entry
     public static IServiceCollection AddEmail(this IServiceCollection serviceCollection, IConfiguration configuration)
     {
         serviceCollection.Configure<EmailOptions>(configuration
-            .GetSection(EmailOptions.SectionName));
+            .GetSection("App:Email"));
         
         serviceCollection.AddSingleton<ISmtpClient>(s =>
         {
@@ -20,7 +20,7 @@ public static class Entry
                           ?? throw new NullReferenceException("Email settings not found");
             var client = new SmtpClient();
             client.Connect(options.SmtpServer, options.SmtpPort);
-            client.Authenticate(options.SenderEmail, options.SenderPassword);
+            client.AuthenticationMechanisms.Clear(); //временно отключаем аутх для почтового сервера
             return client;
         });
         serviceCollection.AddScoped<IEmailService, EmailService>();

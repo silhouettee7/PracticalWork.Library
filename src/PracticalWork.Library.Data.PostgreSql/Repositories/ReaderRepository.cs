@@ -109,10 +109,11 @@ public class ReaderRepository: IReaderRepository
             .ToList());
     }
 
-    public async Task<int> GetNewReadersCount(DateTime startDate, DateTime endDate)
+    public async Task<int> GetNewReadersCount(DateTime startDate, DateTime endDate, 
+        CancellationToken cancellationToken)
     {
         return await _appDbContext.Readers
             .Where(r => r.CreatedAt >= startDate && r.CreatedAt <= endDate)
-            .CountAsync();
+            .CountAsync(cancellationToken: cancellationToken);
     }
 }

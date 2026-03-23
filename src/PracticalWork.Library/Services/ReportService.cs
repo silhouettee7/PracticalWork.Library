@@ -30,6 +30,9 @@ public class ReportService: IReportService
     private readonly string _reportsBucketName;
     private readonly string _reportsAdministrationBucketName;
     private readonly IReadOnlyList<string> _adminEmails;
+    private readonly TimeProvider _timeProvider;
+    private readonly EmailMessagesOptions _emailMessagesOptions;
+    private readonly BackgroundReportsOptions _backgroundReportsOptions;
 
     public ReportService(
         IReportRepository reportRepository,
@@ -45,13 +48,19 @@ public class ReportService: IReportService
         IOptionsMonitor<RedisOptions> redisOptions,
         IOptionsMonitor<RabbitOptions> rabbitOptions,
         IOptionsMonitor<EmailOptions> emailOptions,
-        ILogger<ReportService> logger)
+        ILogger<ReportService> logger,
+        TimeProvider timeProvider,
+        IOptionsMonitor<EmailMessagesOptions> emailMessagesOptions, 
+        IOptionsMonitor<BackgroundReportsOptions> backgroundReportsOptions)
     {
         _reportRepository = reportRepository;
         _cacheService = cacheService;
         _fileStorageService = fileStorageService;
         _publisher = publisher;
         _logger = logger;
+        _timeProvider = timeProvider;
+        _emailMessagesOptions = emailMessagesOptions.CurrentValue;
+        _backgroundReportsOptions = backgroundReportsOptions.CurrentValue;
         _reportGenerateService = reportGenerateService;
         _emailService = emailService;
         var minioOpt = minioOptions.CurrentValue;
@@ -110,7 +119,7 @@ public class ReportService: IReportService
     public async Task<string> GetReportUrl(string reportName)
     {
         var (id,report) = await _reportRepository.GetReportByName(reportName);
-        var generatedDate = report.GeneratedAt ?? DateTime.UtcNow;
+        var generatedDate = report.GeneratedAt ?? _timeProvider.GetUtcNow().DateTime;
         var fileName = $"{generatedDate.Year}/{generatedDate.Month}/{reportName}";
         var filePath = await _fileStorageService.GetFileLinkAsync(
            _reportsBucketName, fileName);
@@ -119,60 +128,120 @@ public class ReportService: IReportService
         return filePath;
     }
 
-    public async Task CreateReportForAdministration()
+    public async Task CreateReportForAdministration(CancellationToken cancellationToken)
     {
-        var reportAdm = new ReportForAdministration();
-        var startDateTime = DateTime.UtcNow.Date.AddDays(-7);
-        var endDateTime = DateTime.UtcNow.Date;
-        reportAdm.AddedBooksCount = await _bookRepository.GetAddedBooksCount(startDateTime, endDateTime);
-        reportAdm.RegisterReadersCount = await _readerRepository.GetNewReadersCount(startDateTime, endDateTime);
+        cancellationToken.ThrowIfCancellationRequested();
+        
+        var booksStatistic = await GetBooksStatisticAsync(cancellationToken);
+        
+        var generatedReport = GenerateReport(booksStatistic);
+        
+        booksStatistic.FileUrl = await SaveReportAndGetFileUrlAsync(generatedReport, cancellationToken);
+
+        var htmlTemplate = await GetEmailMessageHtmlBodyTemplateAsync(cancellationToken);
+        
+        foreach (var adminEmail in _adminEmails)
+        {
+            await SendWeeklyReportToAdmin(adminEmail, booksStatistic, 
+                htmlTemplate, cancellationToken);
+        }
+    }
+
+    private async Task<BooksStatistic> GetBooksStatisticAsync(CancellationToken cancellationToken)
+    {
+        var reportAdm = new BooksStatistic();
+        
+        var startDateTime = _timeProvider.GetUtcNow().DateTime.Date.AddDays(-7);
+        var endDateTime = _timeProvider.GetUtcNow().DateTime.Date;
+        
+        reportAdm.AddedBooksCount = await _bookRepository
+            .GetAddedBooksCount(startDateTime, endDateTime, cancellationToken);
+        reportAdm.RegisterReadersCount = await _readerRepository
+            .GetNewReadersCount(startDateTime, endDateTime, cancellationToken);
+        
         var startDate = DateOnly.FromDateTime(startDateTime);
         var endDate = DateOnly.FromDateTime(endDateTime);
-        var borrowedStatistic = await _borrowRepository.GetBorrowBookStatistic(startDate, endDate);
+        
+        var borrowedStatistic = await _borrowRepository
+            .GetBorrowBookStatistic(startDate, endDate, cancellationToken);
+        
         reportAdm.BorrowedCount = borrowedStatistic.BorrowedCount;
         reportAdm.ReturnedCount = borrowedStatistic.ReturnedCount;
         reportAdm.OverdueCount = borrowedStatistic.OverdueCount;
-        _logger.LogInformation("Информация по отчету для администрации получена");
-        var generatedReport = _reportGenerateService
-            .GenerateReport([reportAdm], $"report_{DateTime.UtcNow:yyyy-MM-dd}.csv");
-        var report = new Report
-        {
-            CreatedAt = DateTime.UtcNow,
-            Status = ReportStatus.Generated,
-            Name = $"Отчет_для_администрации_{DateTime.UtcNow:yyyy-MM-dd}",
-            GeneratedAt = DateTime.UtcNow
-        };
-        _logger.LogInformation("Отчет для администрации сформирован");
-        await _fileStorageService.UploadFileAsync(_reportsAdministrationBucketName, 
-            generatedReport.FileName, generatedReport.Content, generatedReport.ContentType);
-        await _fileStorageService.SetBucketFilesLifeTimeAsync(
-            _reportsAdministrationBucketName, DateTime.UtcNow.AddDays(90), $"{DateTime.UtcNow:MM-dd}" );
-        _logger.LogInformation("Отчет для администрации загружен");
-        var reportUrl = await _fileStorageService.GetFileLinkAsync(
-            _reportsAdministrationBucketName, generatedReport.FileName);
-        report.FilePath = reportUrl;
-        await _reportRepository.SaveReportAsync(report);
-        _logger.LogInformation("Отчет для администрации сохранен");
-        reportAdm.GeneratedAt = report.GeneratedAt.Value;
-        reportAdm.FileUrl = reportUrl;
         reportAdm.PeriodFrom = startDate;
         reportAdm.PeriodTo = endDate.AddDays(-1);
-        var htmlTemplatePath = Path.Combine(Directory.GetCurrentDirectory(), "report_for_admins.html"); 
-        var htmlTemplate = await File.ReadAllTextAsync(htmlTemplatePath);
-        foreach (var adminEmail in _adminEmails)
+
+        return reportAdm;
+    }
+
+    private ReportGenerateResult GenerateReport(BooksStatistic booksStatistic)
+    {
+        var reportName = _backgroundReportsOptions.ReportForAdministration;
+        var reportFileName = $"{reportName}_{_timeProvider.GetUtcNow().DateTime:yyyy-MM-dd}.csv";
+        
+        var generatedReport = _reportGenerateService.GenerateReport([booksStatistic], reportFileName);
+        
+        booksStatistic.GeneratedAt = generatedReport.GeneratedAt;
+        
+        _logger.LogInformation("Отчет для администрации - {ReportName} сформирован", reportFileName);
+        
+        return generatedReport;
+    }
+
+    private async Task<string> SaveReportAndGetFileUrlAsync(ReportGenerateResult generatedReport, 
+        CancellationToken cancellationToken)
+    {
+        await _fileStorageService.UploadFileAsync(_reportsAdministrationBucketName, 
+            generatedReport.FileName, generatedReport.Content, 
+            generatedReport.ContentType, cancellationToken);
+        await _fileStorageService.SetBucketFilesLifeTimeAsync(
+            _reportsAdministrationBucketName, _timeProvider.GetUtcNow().DateTime.AddDays(90), 
+            $"{_timeProvider.GetUtcNow().DateTime:MM-dd}", cancellationToken);
+        
+        _logger.LogInformation("Отчет для администрации - {ReportName} загружен", generatedReport.FileName);
+        
+        var reportUrl = await _fileStorageService.GetFileLinkAsync(
+            _reportsAdministrationBucketName, generatedReport.FileName, cancellationToken);
+        
+        var report = new Report
         {
-            var email = new EmailMessage(adminEmail, "Еженедельный отчет библиотеки", 
-                htmlTemplate, true);
-            email.Personalize(reportAdm);
-            var sentResult = await _emailService.SendAsync(email);
-            if (!sentResult.IsSuccess)
-            {
-                _logger.LogError("Ошибка отправки письма отчета администратору:{adminEmail}", adminEmail);
-            }
-            else
-            {
-                _logger.LogInformation("Письмо успешно отправлено для {adminEmail}", adminEmail);
-            }
+            CreatedAt = _timeProvider.GetUtcNow().DateTime,
+            Status = ReportStatus.Generated,
+            Name = generatedReport.FileName,
+            GeneratedAt = generatedReport.GeneratedAt,
+            FilePath = reportUrl
+        };
+        await _reportRepository.SaveReportAsync(report, cancellationToken);
+        
+        _logger.LogInformation("Отчет для администрации - {ReportName} сохранен", report.Name);
+
+        return report.FilePath;
+    }
+    
+    private async Task<string> GetEmailMessageHtmlBodyTemplateAsync(CancellationToken cancellationToken)
+    {
+        var fileName = _emailMessagesOptions.ReportForAdministration.TemplateFileName;
+        var htmlTemplatePath = Path.Combine(Directory.GetCurrentDirectory(), fileName); 
+        
+        return await File.ReadAllTextAsync(htmlTemplatePath, cancellationToken);
+    }
+
+    private async Task SendWeeklyReportToAdmin(string adminEmail, BooksStatistic booksStatistic, 
+        string htmlTemplate, CancellationToken cancellationToken)
+    {
+        var subject = _emailMessagesOptions.ReportForAdministration.Subject;
+        var email = new EmailMessage(adminEmail, subject, htmlTemplate, true);
+        email.Personalize(booksStatistic);
+        
+        var sentResult = await _emailService.SendAsync(email, cancellationToken);
+        
+        if (sentResult.IsSuccess)
+        {
+            _logger.LogInformation("Отчет успешно отправлен для администратора: {adminEmail}", adminEmail);
+        }
+        else
+        {
+            _logger.LogError("Ошибка отправки отчета администратору: {adminEmail}", adminEmail);
         }
     }
 }

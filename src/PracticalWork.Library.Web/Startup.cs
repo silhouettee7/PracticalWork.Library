@@ -8,8 +8,13 @@ using PracticalWork.Library.Data.PostgreSql;
 using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Web.Configuration;
 using System.Text.Json.Serialization;
+using Hangfire;
+using Hangfire.PostgreSql;
+using PracticalWork.Library.Abstractions.Jobs;
+using PracticalWork.Library.BackgroundTasks.Jobs;
 using PracticalWork.Library.Email;
 using PracticalWork.Library.MessageBroker;
+using PracticalWork.Library.Models;
 using PracticalWork.Library.Reports.PostgreSql;
 
 namespace PracticalWork.Library.Web;
@@ -79,12 +84,27 @@ public class Startup
         services
             .AddMessageBroker(Configuration)
             .AddProducing();
+        
+        services.AddHangfire(config => 
+            config.UsePostgreSqlStorage(opt => 
+                opt.UseNpgsqlConnection(Configuration
+                    .GetSection("App")
+                    .GetConnectionString("Hangfire"))));
+
+        services.AddSingleton<ILibraryJob, ArchiveJob>();
+        services.AddSingleton<ILibraryJob, WeeklyReportJob>();
+        services.AddSingleton<ILibraryJob, ReturnRemindersJob>();
+        
+        services.AddSingleton(TimeProvider.System);
+
     }
 
     [UsedImplicitly]
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime lifetime,
         ILogger logger, IServiceProvider serviceProvider)
     {
+        app.UseHangfireDashboard();
+        
         app.UsePathBase(new PathString(_basePath));
 
         app.UseRouting();
@@ -104,5 +124,12 @@ public class Startup
             });
             endpoints.MapControllers();
         });
+
+        var jobs = app.ApplicationServices.GetServices<ILibraryJob>();
+        foreach (var job in jobs)
+        {
+            var jobCrone = Configuration[$"App:Jobs:{job.ConfigSectionName}"];
+            job.ExecuteCronJob(jobCrone);
+        }
     }
 }

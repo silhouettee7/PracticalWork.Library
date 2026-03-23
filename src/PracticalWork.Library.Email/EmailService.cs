@@ -13,13 +13,13 @@ public class EmailService : IEmailService
     private readonly ISmtpClient _smtpClient;
 
     public EmailService(ISmtpClient client, 
-        OptionsMonitor<EmailOptions> options)
+        IOptionsMonitor<EmailOptions> options)
     {
         _smtpClient = client;
         _options = options.CurrentValue;
     }
 
-    public async Task<EmailSendResult> SendAsync(EmailMessage message)
+    public async Task<EmailSendResult> SendAsync(EmailMessage message, CancellationToken cancellationToken)
     {
         EmailSendResult result = new();
         try
@@ -30,7 +30,7 @@ public class EmailService : IEmailService
             mimeMessage.Subject = message.Subject;
             mimeMessage.Body = GetBodyBuilder(message).ToMessageBody();
 
-            var response = await _smtpClient.SendAsync(mimeMessage);
+            var response = await _smtpClient.SendAsync(mimeMessage, cancellationToken);
             result.IsSuccess = true;
             result.ResponseMessage = response;
         }

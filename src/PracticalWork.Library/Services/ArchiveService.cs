@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Abstractions.Storage;
+using PracticalWork.Library.Dtos;
 using PracticalWork.Library.Enums;
 using PracticalWork.Library.Models;
 using PracticalWork.Library.Options;
@@ -18,14 +19,18 @@ public class ArchiveService: IArchiveService
     private readonly IReportGenerateService _reportGenerateService;
     private readonly IFileStorageService _fileStorageService;
     private readonly MinioOptions _minioOptions;
+    private readonly TimeProvider _timeProvider;
+    private readonly BackgroundReportsOptions _reportsOptions;
 
     public ArchiveService(IBookRepository bookRepository, 
         IBookService bookService,
         IReportGenerateService reportGenerateService,
         ILogger<ArchiveService> logger,
         IFileStorageService fileStorageService,
-        OptionsMonitor<MinioOptions> minioOptions, 
-        IReportRepository reportRepository)
+        IOptionsMonitor<MinioOptions> minioOptions, 
+        IReportRepository reportRepository,
+        TimeProvider timeProvider, 
+        IOptionsMonitor<BackgroundReportsOptions> reportsOptions)
     {
         _bookRepository = bookRepository;
         _bookService = bookService;
@@ -34,24 +39,57 @@ public class ArchiveService: IArchiveService
         _fileStorageService = fileStorageService;
         _reportRepository = reportRepository;
         _minioOptions = minioOptions.CurrentValue;
+        _timeProvider = timeProvider;
+        _reportsOptions = reportsOptions.CurrentValue;
     }
     
-    public async Task ArchiveOldBooksAsync()
+    public async Task ArchiveOldBooksAsync(CancellationToken cancellationToken)
     {
-        var archiveLog = new ArchiveLog();
-        var wrongReasons = new HashSet<string>();
+        cancellationToken.ThrowIfCancellationRequested();
+        
         var stopWatch = Stopwatch.StartNew();
+
+        var books = await GetOldBooksAsync(cancellationToken);
+        var archiveLog = await ArchiveOldBooksAsync(books, cancellationToken);
+        
+        stopWatch.Stop();
+        archiveLog.TotalTime = $"{stopWatch.Elapsed:hh\\:mm\\:ss\\.fff}";
+        
+        _logger.LogInformation("Архивация прошла\n" +
+                               "Всего:{TotalCount}\n" +
+                               "Успешных:{SuccessCount}\n" +
+                               "Пропущенных:{WrongCount}\n" +
+                               "Время:{TotalTime}\n}", 
+            archiveLog.TotalCount, archiveLog.SuccessCount, archiveLog.WrongCount, archiveLog.TotalTime);
+        
+        var report = GenerateReport(archiveLog);
+        await SaveReportAsync(report, cancellationToken);
+    }
+
+    private async Task<List<AvailableOldBookDto>> GetOldBooksAsync(CancellationToken cancellationToken)
+    {
         var pagination = new CursorPaginationRequest
         {
             PageSize = 100,
             Forward = true
         };
-        var books = await _bookRepository.GetAvailableOldBooksPage(pagination);
+        var dateThreeYearsAgo = DateOnly.FromDateTime(
+            _timeProvider.GetUtcNow().DateTime.AddYears(-3));
+        return await _bookRepository
+            .GetAvailableOldBooksPage(dateThreeYearsAgo, pagination, cancellationToken);
+    }
+
+    private async Task<ArchiveLog> ArchiveOldBooksAsync(
+        List<AvailableOldBookDto> books, CancellationToken cancellationToken)
+    {
+        var archiveLog = new ArchiveLog();
+        var wrongReasons = new HashSet<string>();
+        
         foreach (var book in books)
         {
             try
             {
-                await _bookService.ArchiveBook(book.Id);
+                await _bookService.ArchiveBook(book.Id, cancellationToken);
                 archiveLog.SuccessCount++;
                 _logger.LogInformation("Книга с id:{Id} архивирована",book.Id);
             }
@@ -59,35 +97,39 @@ public class ArchiveService: IArchiveService
             {
                 archiveLog.WrongCount++;
                 wrongReasons.Add(ex.Message);
-                _logger.LogError(ex, "Архивация книга с id:{Id} не удалась",book.Id);
+                _logger.LogError(ex, "Архивация книга с id:{Id} не удалась " +
+                                     "по причине: {Reason}",book.Id, ex.Message);
             }
             archiveLog.TotalCount++;
         }
         archiveLog.WrongReasons = string.Join(";\n", wrongReasons);
-        stopWatch.Stop();
-        archiveLog.TotalTime = $"{stopWatch.Elapsed:hh\\:mm\\:ss\\.fff}";
-        _logger.LogInformation("Архивация прошла\n" +
-                               "Всего:{TotalCount}\n" +
-                               "Успешных:{SuccessCount}\n" +
-                               "Пропущенных:{WrongCount}\n" +
-                               "Время:{TotalTime}\n}", 
-            archiveLog.TotalCount, archiveLog.SuccessCount, archiveLog.WrongCount, archiveLog.TotalTime);
-        var reportName = "Архивация_старых_книг";
-        var timestamp = DateTime.UtcNow;
+        
+        return archiveLog;
+    }
+
+    private ReportGenerateResult GenerateReport(ArchiveLog archiveLog)
+    {
+        var reportName = _reportsOptions.ReportAboutArchive;
+        var timestamp = _timeProvider.GetUtcNow().DateTime;
         string fileName = $"{timestamp.Year}/{reportName}_{timestamp.Month}.csv";
-        var result = _reportGenerateService.GenerateReport([archiveLog], fileName);
-        var reportSave = new Report()
-        {
-            CreatedAt = DateTime.UtcNow,
-            GeneratedAt = DateTime.UtcNow,
-            Status = ReportStatus.Generated,
-            Name = fileName
-        };
+        return _reportGenerateService.GenerateReport([archiveLog], fileName);
+    }
+
+    private async Task SaveReportAsync(ReportGenerateResult report, CancellationToken cancellationToken)
+    {
         await _fileStorageService.UploadFileAsync(
-            _minioOptions.ArchiveBooksBucketName, result.FileName, result.Content, result.ContentType);
+            _minioOptions.ArchiveBooksBucketName, report.FileName, report.Content, report.ContentType, cancellationToken);
         var filePath = await _fileStorageService.GetFileLinkAsync(
-            _minioOptions.ArchiveBooksBucketName,fileName);
-        reportSave.FilePath = filePath;
-        await _reportRepository.SaveReportAsync(reportSave);
+            _minioOptions.ArchiveBooksBucketName,report.FileName, cancellationToken);
+        
+        var reportSave = new Report
+        {
+            CreatedAt = _timeProvider.GetUtcNow().DateTime,
+            GeneratedAt = _timeProvider.GetUtcNow().DateTime,
+            Status = ReportStatus.Generated,
+            Name = report.FileName,
+            FilePath = filePath
+        };
+        await _reportRepository.SaveReportAsync(reportSave, cancellationToken);
     }
 }

@@ -26,13 +26,8 @@ public class EmailOptions
     /// <summary> Email адрес отправителя для всех исходящих сообщений </summary>
     public string SenderEmail { get; set; } = "noreply@library.local";
     /// <summary>
-    /// Пароль для аутентификации отправителя
-    /// </summary>
-    public required string SenderPassword { get; set; }
-    /// <summary>
     /// Список email адресов администраторов библиотеки для
     /// получения системных уведомлений
     /// </summary>
     public List<string> AdminEmails { get; set; } = new();
-    public static readonly string SectionName = "EmailSettings";
 }

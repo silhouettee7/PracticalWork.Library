@@ -11,7 +11,9 @@ public interface IRabbitMqPublisher
     /// <param name="exchange">название обменника</param>
     /// <param name="routingKey">ключ маршрутизации</param>
     /// <param name="message">сообщение</param>
+    /// <param name="cancellationToken">токен отмены</param>
     /// <typeparam name="T">тип сообщения</typeparam>
     /// <returns>удалось ли отправить сообщение</returns>
-    Task<bool> PublishAsync<T>(string exchange, string routingKey, T message);
+    Task<bool> PublishAsync<T>(string exchange, string routingKey,
+        T message, CancellationToken cancellationToken = default);
 }

@@ -27,9 +27,5 @@ internal sealed class AbstractBookConfiguration : EntityConfigurationBase<Abstra
 
         builder.Property(p => p.CoverImagePath)
             .HasMaxLength(500);
-
-        builder.HasMany(c => c.IssuanceRecords)
-            .WithOne()
-            .HasForeignKey(p => p.BookId);
     }
 }

@@ -12,8 +12,8 @@ using PracticalWork.Library.Data.PostgreSql;
 namespace PracticalWork.Library.Data.PostgreSql.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251030084302_Third")]
-    partial class Third
+    [Migration("20260321213053_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -89,10 +89,13 @@ namespace PracticalWork.Library.Data.PostgreSql.Migrations
                     b.Property<DateOnly>("DueDate")
                         .HasColumnType("date");
 
+                    b.Property<DateTime?>("LastEmailSentAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("ReaderId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateOnly>("ReturnDate")
+                    b.Property<DateOnly?>("ReturnDate")
                         .HasColumnType("date");
 
                     b.Property<int>("Status")
@@ -192,13 +195,15 @@ namespace PracticalWork.Library.Data.PostgreSql.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PracticalWork.Library.Data.PostgreSql.Entities.ReaderEntity", null)
+                    b.HasOne("PracticalWork.Library.Data.PostgreSql.Entities.ReaderEntity", "Reader")
                         .WithMany("BorrowedRecords")
                         .HasForeignKey("ReaderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Book");
+
+                    b.Navigation("Reader");
                 });
 
             modelBuilder.Entity("PracticalWork.Library.Data.PostgreSql.Entities.EducationalBookEntity", b =>

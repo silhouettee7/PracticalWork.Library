@@ -4,17 +4,26 @@
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <UserSecretsId>dotnet-PracticalWork.Library.Worker.Consumers-b1d8b950-cd62-40a0-9567-c411a811cb73</UserSecretsId>
+        <UserSecretsId>dotnet-PracticalWork.Library.BackgroundTasks-8abc44f0-4a24-42f0-983c-139901efc18e</UserSecretsId>
     </PropertyGroup>
-
+    
     <ItemGroup>
+        <PackageReference Include="Hangfire" />
+        <PackageReference Include="Hangfire.PostgreSql" />
         <PackageReference Include="Microsoft.Extensions.Hosting"/>
     </ItemGroup>
-    
+    <ItemGroup>
+        <None Update="HtmlTemplates\**\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\PracticalWork.Library.Cache.Redis\PracticalWork.Library.Cache.Redis.csproj" />
       <ProjectReference Include="..\PracticalWork.Library.Data.Minio\PracticalWork.Library.Data.Minio.csproj" />
+      <ProjectReference Include="..\PracticalWork.Library.Data.PostgreSql\PracticalWork.Library.Data.PostgreSql.csproj" />
+      <ProjectReference Include="..\PracticalWork.Library.Email\PracticalWork.Library.Email.csproj" />
       <ProjectReference Include="..\PracticalWork.Library.MessageBroker\PracticalWork.Library.MessageBroker.csproj" />
       <ProjectReference Include="..\PracticalWork.Library.Reports.PostgreSql\PracticalWork.Library.Reports.PostgreSql.csproj" />
+      <ProjectReference Include="..\PracticalWork.Library\PracticalWork.Library.csproj" />
     </ItemGroup>
 </Project>

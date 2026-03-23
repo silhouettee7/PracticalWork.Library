@@ -92,7 +92,7 @@ namespace PracticalWork.Library.Data.PostgreSql.Migrations
                     b.Property<Guid>("ReaderId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateOnly>("ReturnDate")
+                    b.Property<DateOnly?>("ReturnDate")
                         .HasColumnType("date");
 
                     b.Property<int>("Status")
@@ -192,13 +192,15 @@ namespace PracticalWork.Library.Data.PostgreSql.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PracticalWork.Library.Data.PostgreSql.Entities.ReaderEntity", null)
+                    b.HasOne("PracticalWork.Library.Data.PostgreSql.Entities.ReaderEntity", "Reader")
                         .WithMany("BorrowedRecords")
                         .HasForeignKey("ReaderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Book");
+
+                    b.Navigation("Reader");
                 });
 
             modelBuilder.Entity("PracticalWork.Library.Data.PostgreSql.Entities.EducationalBookEntity", b =>

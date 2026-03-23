@@ -16,4 +16,8 @@
     <ProjectReference Include="..\PracticalWork.Library\PracticalWork.Library.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
+
 </Project>

@@ -98,7 +98,7 @@ public class ReportRepository: IReportRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task SaveReportAsync(Report report)
+    public async Task SaveReportAsync(Report report, CancellationToken cancellationToken)
     {
         var entity = new ReportEntity
         {
@@ -108,7 +108,7 @@ public class ReportRepository: IReportRepository
             GeneratedAt = report.GeneratedAt,
             CreatedAt = report.CreatedAt
         };
-        await _context.Reports.AddAsync(entity);
-        await _context.SaveChangesAsync();
+        await _context.Reports.AddAsync(entity, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }

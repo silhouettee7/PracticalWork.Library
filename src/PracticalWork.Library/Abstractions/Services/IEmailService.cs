@@ -14,5 +14,6 @@ public interface IEmailService
     /// <see cref="EmailMessage"/>, содержит информацию о письме:
     /// получателя, тему, тело (HTML и текст), дополнительные параметры
     /// </param>
-    Task<EmailSendResult> SendAsync(EmailMessage message);
+    /// <param name="cancellationToken">токен отмены</param>
+    Task<EmailSendResult> SendAsync(EmailMessage message, CancellationToken cancellationToken);
 }

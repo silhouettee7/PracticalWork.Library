@@ -19,13 +19,13 @@ public class RabbitMqPublisher: IRabbitMqPublisher
         _channelPool = channelPool;
         _logger = logger;
     }
-    public async Task<bool> PublishAsync<T>(string exchange, string routingKey, T message)
+    public async Task<bool> PublishAsync<T>(string exchange, string routingKey, T message, CancellationToken cancellationToken = default)
     {
         IChannel? channel = null;
         
         try
         {
-            channel = await _channelPool.GetChannelAsync();
+            channel = await _channelPool.GetChannelAsync(cancellationToken);
             
             var body = Encoding.UTF8.GetBytes(
                 JsonSerializer.Serialize(message));
@@ -33,7 +33,8 @@ public class RabbitMqPublisher: IRabbitMqPublisher
             await channel.BasicPublishAsync(
                 exchange: exchange,
                 routingKey: routingKey,
-                body: body);
+                body: body,
+                cancellationToken: cancellationToken);
             return true;
         }
         catch (Exception ex)

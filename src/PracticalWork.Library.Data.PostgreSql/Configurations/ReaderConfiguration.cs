@@ -17,10 +17,6 @@ internal sealed class ReaderConfiguration : EntityConfigurationBase<ReaderEntity
             .HasMaxLength(12)
             .IsRequired();
 
-        builder.HasMany(c => c.BorrowedRecords)
-            .WithOne()
-            .HasForeignKey(p => p.ReaderId);
-
         builder.HasIndex(r => r.PhoneNumber).IsUnique();
     }
 }

@@ -50,9 +50,9 @@ public class RabbitMqChannelPool: IRabbitMqChannelPool, IInitializable
         };
     }
 
-    public async Task<IChannel> GetChannelAsync()
+    public async Task<IChannel> GetChannelAsync(CancellationToken cancellationToken = default)
     {
-        await _channelLock.WaitAsync();
+        await _channelLock.WaitAsync(cancellationToken);
         try
         {
             if (_channelPool.TryTake(out var channel))
@@ -63,7 +63,7 @@ public class RabbitMqChannelPool: IRabbitMqChannelPool, IInitializable
                 }
             }
             if (_connection is null) throw new NullReferenceException(nameof(_connection));
-            channel = await _connection.CreateChannelAsync();
+            channel = await _connection.CreateChannelAsync(cancellationToken:cancellationToken);
             channel.ChannelShutdownAsync += (_, ea) =>
             {
                 _logger.LogError("RabbitMQ channel shutdown: {Reason}", ea.ReplyText);

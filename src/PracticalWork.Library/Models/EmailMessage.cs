@@ -1,3 +1,5 @@
+using System.Collections;
+
 namespace PracticalWork.Library.Models;
 
 public class EmailMessage
@@ -26,10 +28,25 @@ public class EmailMessage
         }
         foreach (var property in personalizationObject.GetType().GetProperties())
         {
-            Body = Body
-                .Replace("{{" + property.Name + "}}", property
-                    .GetValue(personalizationObject)?
-                    .ToString());
+            if (property.PropertyType == typeof(IEnumerable))
+            {
+                var replaceValue = string.Join(", ", (IEnumerable)property.GetValue(personalizationObject));
+                Body = Body.Replace("{" + property.Name + "}", replaceValue);
+            }
+
+            if (property.PropertyType == typeof(DateOnly))
+            {
+                var replaceValue = $"{(DateOnly)property.GetValue(personalizationObject)!:dd-MM-yyyy}";
+                Body = Body.Replace("{" + property.Name + "}", replaceValue);
+            }
+            else
+            {
+                Body = Body
+                    .Replace("{{" + property.Name + "}}", property
+                        .GetValue(personalizationObject)?
+                        .ToString());
+            }
+            
         }
         
     }
