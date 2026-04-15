@@ -14,7 +14,7 @@ using PracticalWork.Library.Abstractions.Jobs;
 using PracticalWork.Library.BackgroundTasks.Jobs;
 using PracticalWork.Library.Email;
 using PracticalWork.Library.MessageBroker;
-using PracticalWork.Library.Models;
+using PracticalWork.Library.Options;
 using PracticalWork.Library.Reports.PostgreSql;
 
 namespace PracticalWork.Library.Web;
@@ -90,13 +90,16 @@ public class Startup
                 opt.UseNpgsqlConnection(Configuration
                     .GetSection("App")
                     .GetConnectionString("Hangfire"))));
-
+        
         services.AddSingleton<ILibraryJob, ArchiveJob>();
         services.AddSingleton<ILibraryJob, WeeklyReportJob>();
         services.AddSingleton<ILibraryJob, ReturnRemindersJob>();
         
         services.AddSingleton(TimeProvider.System);
-
+        services.AddBackgroundTasksDomain();
+        services.Configure<SchedulerOptions>(Configuration.GetSection("App:Scheduler"));
+        services.Configure<EmailMessagesOptions>(Configuration.GetSection("App:EmailMessages"));
+        services.Configure<BackgroundReportsOptions>(Configuration.GetSection("App:BackgroundReports"));
     }
 
     [UsedImplicitly]

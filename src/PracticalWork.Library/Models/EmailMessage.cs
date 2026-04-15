@@ -28,16 +28,15 @@ public class EmailMessage
         }
         foreach (var property in personalizationObject.GetType().GetProperties())
         {
-            if (property.PropertyType == typeof(IEnumerable))
+            if (property.GetValue(personalizationObject) is IEnumerable<string> personalizationCollection)
             {
-                var replaceValue = string.Join(", ", (IEnumerable)property.GetValue(personalizationObject));
-                Body = Body.Replace("{" + property.Name + "}", replaceValue);
+                var replaceValue = string.Join(", ", personalizationCollection);
+                Body = Body.Replace("{{" + property.Name + "}}", replaceValue);
             }
-
-            if (property.PropertyType == typeof(DateOnly))
+            else if (property.PropertyType == typeof(DateOnly))
             {
                 var replaceValue = $"{(DateOnly)property.GetValue(personalizationObject)!:dd-MM-yyyy}";
-                Body = Body.Replace("{" + property.Name + "}", replaceValue);
+                Body = Body.Replace("{{" + property.Name + "}}", replaceValue);
             }
             else
             {

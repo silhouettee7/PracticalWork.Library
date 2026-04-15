@@ -119,7 +119,7 @@ public class ReportService: IReportService
     public async Task<string> GetReportUrl(string reportName)
     {
         var (id,report) = await _reportRepository.GetReportByName(reportName);
-        var generatedDate = report.GeneratedAt ?? _timeProvider.GetUtcNow().DateTime;
+        var generatedDate = report.GeneratedAt ?? _timeProvider.GetUtcNow().UtcDateTime;
         var fileName = $"{generatedDate.Year}/{generatedDate.Month}/{reportName}";
         var filePath = await _fileStorageService.GetFileLinkAsync(
            _reportsBucketName, fileName);
@@ -151,8 +151,8 @@ public class ReportService: IReportService
     {
         var reportAdm = new BooksStatistic();
         
-        var startDateTime = _timeProvider.GetUtcNow().DateTime.Date.AddDays(-7);
-        var endDateTime = _timeProvider.GetUtcNow().DateTime.Date;
+        var startDateTime = _timeProvider.GetUtcNow().UtcDateTime.Date.AddDays(-7);
+        var endDateTime = _timeProvider.GetUtcNow().UtcDateTime.Date;
         
         reportAdm.AddedBooksCount = await _bookRepository
             .GetAddedBooksCount(startDateTime, endDateTime, cancellationToken);
@@ -177,7 +177,7 @@ public class ReportService: IReportService
     private ReportGenerateResult GenerateReport(BooksStatistic booksStatistic)
     {
         var reportName = _backgroundReportsOptions.ReportForAdministration;
-        var reportFileName = $"{reportName}_{_timeProvider.GetUtcNow().DateTime:yyyy-MM-dd}.csv";
+        var reportFileName = $"{reportName}_{_timeProvider.GetUtcNow().UtcDateTime:yyyy-MM-dd}.csv";
         
         var generatedReport = _reportGenerateService.GenerateReport([booksStatistic], reportFileName);
         
@@ -195,8 +195,8 @@ public class ReportService: IReportService
             generatedReport.FileName, generatedReport.Content, 
             generatedReport.ContentType, cancellationToken);
         await _fileStorageService.SetBucketFilesLifeTimeAsync(
-            _reportsAdministrationBucketName, _timeProvider.GetUtcNow().DateTime.AddDays(90), 
-            $"{_timeProvider.GetUtcNow().DateTime:MM-dd}", cancellationToken);
+            _reportsAdministrationBucketName, _timeProvider.GetUtcNow().UtcDateTime.AddDays(90), 
+            $"{_timeProvider.GetUtcNow().UtcDateTime:MM-dd}", cancellationToken);
         
         _logger.LogInformation("Отчет для администрации - {ReportName} загружен", generatedReport.FileName);
         
@@ -205,7 +205,7 @@ public class ReportService: IReportService
         
         var report = new Report
         {
-            CreatedAt = _timeProvider.GetUtcNow().DateTime,
+            CreatedAt = _timeProvider.GetUtcNow().UtcDateTime,
             Status = ReportStatus.Generated,
             Name = generatedReport.FileName,
             GeneratedAt = generatedReport.GeneratedAt,

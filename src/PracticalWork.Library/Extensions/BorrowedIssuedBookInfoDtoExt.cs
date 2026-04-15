@@ -5,9 +5,9 @@ namespace PracticalWork.Library.Extensions;
 
 public static class BorrowedIssuedBookInfoDtoExt
 {
-    public static BorrowedBookNotification ToBorrowedBookNotification(this BorrowedIssuedBookInfoDto dto)
+    public static BorrowedBookNotification ToBorrowedBookNotification(this BorrowedIssuedBookInfoDto dto, TimeProvider timeProvider)
     {
-        TimeSpan diff = dto.DueDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc) - DateTime.UtcNow;
+        TimeSpan diff = dto.DueDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc) - timeProvider.GetUtcNow().Date;
         return new BorrowedBookNotification
         {
             BookTitle = dto.BookTitle,

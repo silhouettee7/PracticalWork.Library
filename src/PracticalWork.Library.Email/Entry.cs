@@ -14,7 +14,7 @@ public static class Entry
         serviceCollection.Configure<EmailOptions>(configuration
             .GetSection("App:Email"));
         
-        serviceCollection.AddSingleton<ISmtpClient>(s =>
+        serviceCollection.AddScoped<ISmtpClient>(s =>
         {
             var options = s.GetService<IOptions<EmailOptions>>()?.Value
                           ?? throw new NullReferenceException("Email settings not found");

@@ -31,9 +31,26 @@ public class JobController: Controller
     public IActionResult Notify(IServiceProvider serviceProvider)
     {
         var scope = serviceProvider.CreateScope();
-        var job = scope.ServiceProvider.GetService<INotificationService>();
-        job.NotifyReadersWithIssuedBorrowedBooksAsync(CancellationToken.None);
+        var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
+        notificationService.NotifyReadersWithIssuedBorrowedBooksAsync(CancellationToken.None);
+        return Ok();
+    }
+    
+    [HttpPost("/report")]
+    public IActionResult Report(IServiceProvider serviceProvider)
+    {
+        var scope = serviceProvider.CreateScope();
+        var reportService = scope.ServiceProvider.GetRequiredService<IReportService>();
+        reportService.CreateReportForAdministration(CancellationToken.None);
+        return Ok();
+    }
 
+    [HttpPost("/archive")]
+    public IActionResult Archive(IServiceProvider serviceProvider)
+    {
+        var scope = serviceProvider.CreateScope();
+        var archiveService = scope.ServiceProvider.GetRequiredService<IArchiveService>();
+        archiveService.ArchiveOldBooksAsync(CancellationToken.None);
         return Ok();
     }
 }

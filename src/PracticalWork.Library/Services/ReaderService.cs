@@ -52,7 +52,7 @@ public class ReaderService: IReaderService
         reader.IsActive = true;
         var id = await _readerRepository.CreateReader(reader);
         var message = new ReaderCreatedEvent(id, reader.FullName,
-            reader.PhoneNumber, reader.ExpiryDate, _timeProvider.GetUtcNow().DateTime);
+            reader.PhoneNumber, reader.ExpiryDate, _timeProvider.GetUtcNow().UtcDateTime);
         await _publisher.PublishAsync(
             _libraryExchangeName, 
             _readerCreateRoutingKey, 
@@ -85,10 +85,10 @@ public class ReaderService: IReaderService
             return (true, readerWithBorrowBooks.BorrowBooks);
         }
         readerWithBorrowBooks.IsActive = false;
-        readerWithBorrowBooks.ExpiryDate = DateOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime);
+        readerWithBorrowBooks.ExpiryDate = DateOnly.FromDateTime(_timeProvider.GetUtcNow().UtcDateTime);
         await _readerRepository.UpdateReader(id, readerWithBorrowBooks);
         var message = new ReaderClosedEvent(id, readerWithBorrowBooks.FullName,
-            _timeProvider.GetUtcNow().DateTime, "Вызван метод закрытия карточки");
+            _timeProvider.GetUtcNow().UtcDateTime, "Вызван метод закрытия карточки");
         await _publisher.PublishAsync(
             _libraryExchangeName, 
             _readerCloseRoutingKey, 

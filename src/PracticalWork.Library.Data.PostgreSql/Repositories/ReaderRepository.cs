@@ -113,7 +113,7 @@ public class ReaderRepository: IReaderRepository
         CancellationToken cancellationToken)
     {
         return await _appDbContext.Readers
-            .Where(r => r.CreatedAt >= startDate && r.CreatedAt <= endDate)
+            .Where(r => r.CreatedAt >= startDate && r.CreatedAt < endDate)
             .CountAsync(cancellationToken: cancellationToken);
     }
 }

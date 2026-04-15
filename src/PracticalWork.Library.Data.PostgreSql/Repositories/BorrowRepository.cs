@@ -92,9 +92,9 @@ public class BorrowRepository: IBorrowRepository
             .GroupBy(b => 1)
             .Select(g => new BorrowBookStatisticDto
             {
-                BorrowedCount = g.Count(b => b.BorrowDate >= from && b.BorrowDate <= to),
-                ReturnedCount = g.Count(b => b.ReturnDate >= from && b.ReturnDate <= to),
-                OverdueCount = g.Count(b => b.DueDate >= from && b.DueDate <= to
+                BorrowedCount = g.Count(b => b.BorrowDate >= from && b.BorrowDate < to),
+                ReturnedCount = g.Count(b => b.ReturnDate >= from && b.ReturnDate < to),
+                OverdueCount = g.Count(b => b.DueDate >= from && b.DueDate < to
                                                                  && b.ReturnDate == null),
             })
             .FirstOrDefaultAsync(cancellationToken: cancellationToken);

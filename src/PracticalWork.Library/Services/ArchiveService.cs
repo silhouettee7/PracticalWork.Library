@@ -59,7 +59,7 @@ public class ArchiveService: IArchiveService
                                "Всего:{TotalCount}\n" +
                                "Успешных:{SuccessCount}\n" +
                                "Пропущенных:{WrongCount}\n" +
-                               "Время:{TotalTime}\n}", 
+                               "Время:{TotalTime}\n", 
             archiveLog.TotalCount, archiveLog.SuccessCount, archiveLog.WrongCount, archiveLog.TotalTime);
         
         var report = GenerateReport(archiveLog);
@@ -74,7 +74,7 @@ public class ArchiveService: IArchiveService
             Forward = true
         };
         var dateThreeYearsAgo = DateOnly.FromDateTime(
-            _timeProvider.GetUtcNow().DateTime.AddYears(-3));
+            _timeProvider.GetUtcNow().UtcDateTime.AddYears(-3));
         return await _bookRepository
             .GetAvailableOldBooksPage(dateThreeYearsAgo, pagination, cancellationToken);
     }
@@ -110,7 +110,7 @@ public class ArchiveService: IArchiveService
     private ReportGenerateResult GenerateReport(ArchiveLog archiveLog)
     {
         var reportName = _reportsOptions.ReportAboutArchive;
-        var timestamp = _timeProvider.GetUtcNow().DateTime;
+        var timestamp = _timeProvider.GetUtcNow().UtcDateTime;
         string fileName = $"{timestamp.Year}/{reportName}_{timestamp.Month}.csv";
         return _reportGenerateService.GenerateReport([archiveLog], fileName);
     }
@@ -124,8 +124,8 @@ public class ArchiveService: IArchiveService
         
         var reportSave = new Report
         {
-            CreatedAt = _timeProvider.GetUtcNow().DateTime,
-            GeneratedAt = _timeProvider.GetUtcNow().DateTime,
+            CreatedAt = _timeProvider.GetUtcNow().UtcDateTime,
+            GeneratedAt = _timeProvider.GetUtcNow().UtcDateTime,
             Status = ReportStatus.Generated,
             Name = report.FileName,
             FilePath = filePath

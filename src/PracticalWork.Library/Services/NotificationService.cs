@@ -50,12 +50,10 @@ public class NotificationService: INotificationService
     
     private async Task<List<BorrowedIssuedBookInfoDto>> GetBorrowedIssuedBooksInfoAsync(CancellationToken cancellationToken)
     {
-        var dateThreeDaysAfter = DateOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime.AddDays(3));
-        var dateOneDayAgo = DateOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime.AddDays(-1));
+        var dateThreeDaysAfter = DateOnly.FromDateTime(_timeProvider.GetUtcNow().UtcDateTime.AddDays(3));
+        var dateOneDayAgo = DateOnly.FromDateTime(_timeProvider.GetUtcNow().UtcDateTime.AddDays(-1));
         var toleranceMinutes = _schedulerOptions.NotificationToleranceMinutes;
-        var dateToleranceMinutesAgo = _timeProvider.GetUtcNow().DateTime
-            .AddMinutes(-toleranceMinutes)
-            .ToUniversalTime();
+        var dateToleranceMinutesAgo = _timeProvider.GetUtcNow().UtcDateTime.AddMinutes(-toleranceMinutes);
         
         return await _borrowRepository.GetBorrowedIssuedBooksInfo(
             dateOneDayAgo, dateThreeDaysAfter, dateToleranceMinutesAgo, cancellationToken);
@@ -72,7 +70,7 @@ public class NotificationService: INotificationService
     private async Task NotifyReaderAboutBorrowedBookAsync(BorrowedIssuedBookInfoDto borrowBook, 
         string emailMessageHtmlBodyTemplate, CancellationToken cancellationToken)
     {
-        var borrowedBookNotification = borrowBook.ToBorrowedBookNotification();
+        var borrowedBookNotification = borrowBook.ToBorrowedBookNotification(_timeProvider);
         var emailMessage = GetEmailMessage(emailMessageHtmlBodyTemplate, borrowedBookNotification);
         var sentResult = await _emailService.SendAsync(emailMessage, cancellationToken);
         if (sentResult.IsSuccess)
@@ -108,11 +106,15 @@ public class NotificationService: INotificationService
     {
         try
         {
-            await _borrowRepository.UpdateLastEmailSentAsync(id, _timeProvider.GetUtcNow().DateTime, cancellationToken);
+            await _borrowRepository.UpdateLastEmailSentAsync(
+                id, 
+                _timeProvider.GetUtcNow().UtcDateTime, 
+                cancellationToken);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка обновления даты отправки, возможен повтор уведомления");
+            throw;
         }
     }
 }

@@ -132,7 +132,7 @@ public sealed class BookRepository : IBookRepository
         CancellationToken cancellationToken)
     {
         return await _appDbContext.Books
-            .Where(b => b.CreatedAt >= startDate && b.CreatedAt <= endDate)
+            .Where(b => b.CreatedAt >= startDate && b.CreatedAt < endDate)
             .CountAsync(cancellationToken: cancellationToken);
     }
 }

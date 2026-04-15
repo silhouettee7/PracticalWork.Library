@@ -19,7 +19,7 @@ public class ReportGenerateService: IReportGenerateService
 
     public ReportGenerateResult GenerateReport(Guid reportId, IReadOnlyList<ActivityLog> logs)
     {
-        var timestamp = _timeProvider.GetUtcNow().DateTime;
+        var timestamp = _timeProvider.GetUtcNow().UtcDateTime;
         string fileName = $"{timestamp.Year}/{timestamp.Month}/{reportId}.csv";
         string contentType = "text/csv";
 
@@ -43,21 +43,23 @@ public class ReportGenerateService: IReportGenerateService
     public ReportGenerateResult GenerateReport<T>(IEnumerable<T> items, string fileName)
     {
         var csv = new StringBuilder();
-        var properties = typeof(T).GetProperties()
+        var tableColumns = typeof(T).GetProperties()
             .Select(p => new
             {
                 Property = p,
-                Attribute = p.GetCustomAttribute<TableColumnAttribute>() 
-                            ?? new TableColumnAttribute(p.Name)
+                Attribute = p.GetCustomAttribute<TableColumnAttribute>()
             })
+            .Where(p => p.Attribute is not null)
             .OrderBy(x => x.Attribute.Order)
             .ToList();
-        var headers = properties.Select(x => x.Attribute.Name);
+        
+        var headers = tableColumns.Select(x => x.Attribute.Name);
         csv.AppendLine(string.Join(";", headers));
+        
         foreach (var item in items)
         {
-            var row = new List<string>(properties.Count);
-            foreach (var property in properties)
+            var row = new List<string>(tableColumns.Count);
+            foreach (var property in tableColumns)
             {
                 var val = property.Property.GetValue(item);
                 var stringValue = val?.ToString() ?? string.Empty;
@@ -74,7 +76,7 @@ public class ReportGenerateService: IReportGenerateService
             FileName = fileName,
             Content = stream,
             ContentType = contentType,
-            GeneratedAt = _timeProvider.GetUtcNow().DateTime
+            GeneratedAt = _timeProvider.GetUtcNow().UtcDateTime,
         };
     }
 }

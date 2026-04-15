@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Еженедельный отчет библиотеки</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .email-container {
+            max-width: 650px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .email-content {
+            padding: 30px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #28a745;
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 0 0 10px 0;
+        }
+
+        .period {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            color: #495057;
+            margin-top: 10px;
+        }
+        
+        .stats-container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 0 0 8px 8px;
+            margin-bottom: 30px;
+            border: 1px solid #e9ecef;
+            border-top: none;
+        }
+
+        .stats-header {
+            font-family: Arial, sans-serif;
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 20px;
+            margin-bottom: 10px;
+        }
+
+        .stats-header h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .stat-item {
+            padding: 15px 0;
+            border-bottom: 1px dashed #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            color: #495057;
+            font-weight: normal;
+        }
+
+        .stat-value {
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .download-section {
+            text-align: center;
+            margin: 35px 0 30px 0;
+            padding: 20px 0;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .download-button {
+            display: inline-block;
+            background-color: #28a745;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .download-button:hover {
+            background-color: #218838;
+        }
+
+        .download-link-text {
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 12px;
+            display: block;
+        }
+        
+        .notes {
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            color: #6c757d;
+            font-style: italic;
+            margin: 25px 0 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #28a745;
+            border-radius: 4px;
+        }
+
+        .notes p {
+            margin: 5px 0;
+        }
+        
+        .signature {
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            color: #495057;
+            margin: 20px 0 0 0;
+            padding-top: 15px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .signature p {
+            margin: 5px 0;
+        }
+        
+        .footer {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            color: #adb5bd;
+            text-align: center;
+            padding: 20px;
+            background-color: #ffffff;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .footer p {
+            margin: 5px 0;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #e9ecef;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 600px) {
+            .email-content {
+                padding: 20px;
+            }
+
+            .stats-container {
+                padding: 20px;
+            }
+
+            .stat-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .stat-value {
+                align-self: flex-start;
+            }
+
+            .download-button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .period {
+                font-size: 14px;
+            }
+        }
+        
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+
+            .download-button {
+                background-color: #28a745 !important;
+                color: white !important;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <div class="email-content">
+        <div class="header">
+            <h1>ЕЖЕНЕДЕЛЬНЫЙ ОТЧЕТ БИБЛИОТЕКИ</h1>
+            <div class="period">
+                Период: {{PeriodFrom}} - {{PeriodTo}}
+            </div>
+        </div>
+        
+        <div class="stats-container">
+            <div class="stats-header">
+                <h2>ОСНОВНАЯ СТАТИСТИКА</h2>
+            </div>
+
+            <div class="stat-item">
+                <span class="stat-label">Новые книги:</span>
+                <span class="stat-value">{{AddedBooksCount}}</span>
+            </div>
+
+            <div class="stat-item">
+                <span class="stat-label">Новые читатели:</span>
+                <span class="stat-value">{{RegisterReadersCount}}</span>
+            </div>
+
+            <div class="stat-item">
+                <span class="stat-label">Выдано книг:</span>
+                <span class="stat-value">{{BorrowedCount}}</span>
+            </div>
+
+            <div class="stat-item">
+                <span class="stat-label">Возвращено книг:</span>
+                <span class="stat-value">{{ReturnedCount}}</span>
+            </div>
+
+            <div class="stat-item">
+                <span class="stat-label">Просроченные выдачи:</span>
+                <span class="stat-value">{{OverdueCount}}</span>
+            </div>
+        </div>
+
+        <div class="download-section">
+            <a href="{{FileUrl}}" class="download-button">
+                Скачать полный отчет
+            </a>
+            <div class="download-link-text">
+                Полный отчет доступен для скачивания по ссылке выше
+            </div>
+        </div>
+        
+        <div class="notes">
+            <p>Отчет сгенерирован автоматически: {{GeneratedAt}}</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Это автоматически сгенерированное сообщение.</p>
+        <p>Для получения дополнительной информации обратитесь в систему.</p>
+    </div>
+</div>
+</body>
+</html>

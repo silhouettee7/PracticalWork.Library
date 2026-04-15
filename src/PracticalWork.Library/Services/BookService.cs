@@ -99,7 +99,7 @@ public sealed class BookService : IBookService
         {
             Id = id,
             Title = book.Title,
-            ArchivedAt = _timeProvider.GetUtcNow().DateTime
+            ArchivedAt = _timeProvider.GetUtcNow().UtcDateTime
         };
         var message = new BookArchivedEvent(id, book.Title, 
             "Вызван метод архивации книги", response.ArchivedAt);
@@ -136,7 +136,7 @@ public sealed class BookService : IBookService
     public async Task AddBookDetails(Guid bookId, string description, Stream coverImageStream, string contentType)
     {
         var book = await _bookRepository.GetBookById(bookId);
-        var currentDate = _timeProvider.GetUtcNow().DateTime;
+        var currentDate = _timeProvider.GetUtcNow().UtcDateTime;
         var fileName = $"book-covers/{currentDate.Year}/{currentDate.Month}/{bookId}";
         await _fileStorageService.UploadFileAsync(_coversBucketName,fileName, coverImageStream, contentType);
         book.Description = description;

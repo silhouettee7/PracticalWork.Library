@@ -82,7 +82,7 @@ public class LibraryService: ILibraryService
         book.Status = BookStatus.Borrow;
         await _borrowRepository.CreateBookBorrow(bookId, readerId, bookBorrow);
         await _bookRepository.UpdateBook(bookId, book);
-        var message = new BookBorrowedEvent(bookId, readerId, bookBorrow.Book.Title, 
+        var message = new BookBorrowedEvent(bookId, readerId, book.Title, 
             reader.FullName, bookBorrow.BorrowDate, bookBorrow.DueDate );
         await _publisher.PublishAsync(
             _libraryExchangeName,
