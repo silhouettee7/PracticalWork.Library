@@ -10,4 +10,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
+  <PropertyGroup>
+    <NuGetAudit>false</NuGetAudit>
+    <NuGetAuditLevel>low</NuGetAuditLevel>
+  </PropertyGroup>
 </Project>
