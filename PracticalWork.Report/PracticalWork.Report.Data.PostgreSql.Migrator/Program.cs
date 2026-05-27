@@ -3,15 +3,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using PracticalWork.Report.PostgreSql;
 
-namespace PracticalWork.Library.Data.PostgreSql.Migrator;
+namespace PracticalWork.Report.Data.PostgreSql.Migrator;
 
 [UsedImplicitly]
 public class Program
 {
     private const string AppName = "PracticalWork.Library.Data.PostgreSql.Migrator";
 
-    private static IConfiguration Configuration { get; set; }
+    private static IConfiguration Configuration { get; set; } 
 
     private static readonly ILogger SystemLogger = CreateSystemLogger();
 
@@ -36,7 +37,7 @@ public class Program
     {
         var serviceProvider = CreateServices();
         var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
-        await LibraryMigrationsRunner.ApplyMigrations(logger, serviceProvider, AppName);
+        await ReportsMigrationsRunner.ApplyMigrations(logger, serviceProvider, AppName);
     }
 
     private static IServiceProvider CreateServices()
@@ -49,7 +50,7 @@ public class Program
                 builder.AddConfiguration(Configuration.GetSection("Logging"));
                 builder.ClearProviders();
             })
-            .AddDbContext<AppDbContext>(options => options.UseNpgsql(Configuration["App:AppDbContext"],
+            .AddDbContext<ReportsDbContext>(options => options.UseNpgsql(Configuration["App:ReportsDbContext"],
                 sqlServerOptions => sqlServerOptions.CommandTimeout(Configuration.GetValue<int>("App:MigrationTimeoutInSeconds"))))
             .BuildServiceProvider(false);
     }

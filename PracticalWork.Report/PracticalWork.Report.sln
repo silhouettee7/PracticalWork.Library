@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PracticalWork.Report", "PracticalWork.Report\PracticalWork.Report.csproj", "{40FB70A9-FEDC-4FB0-87CB-45C22161A5F5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{D0C62D98-8CB9-4236-B271-B13554A815EB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PracticalWork.Report.PostgreSql", "PracticalWork.Report.PostgreSql\PracticalWork.Report.PostgreSql.csproj", "{A7CB957B-E64B-4D5F-92D5-A5000783D40D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "utils", "utils", "{598D34C7-6E92-48F5-AAF8-F29BA1E32A6D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PracticalWork.Report.Data.PostgreSql.Migrator", "PracticalWork.Report.Data.PostgreSql.Migrator\PracticalWork.Report.Data.PostgreSql.Migrator.csproj", "{849DC5B0-E411-4BC7-A111-12B70B39237B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{40FB70A9-FEDC-4FB0-87CB-45C22161A5F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40FB70A9-FEDC-4FB0-87CB-45C22161A5F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40FB70A9-FEDC-4FB0-87CB-45C22161A5F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40FB70A9-FEDC-4FB0-87CB-45C22161A5F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7CB957B-E64B-4D5F-92D5-A5000783D40D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7CB957B-E64B-4D5F-92D5-A5000783D40D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7CB957B-E64B-4D5F-92D5-A5000783D40D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7CB957B-E64B-4D5F-92D5-A5000783D40D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{849DC5B0-E411-4BC7-A111-12B70B39237B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{849DC5B0-E411-4BC7-A111-12B70B39237B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{849DC5B0-E411-4BC7-A111-12B70B39237B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{849DC5B0-E411-4BC7-A111-12B70B39237B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A7CB957B-E64B-4D5F-92D5-A5000783D40D} = {D0C62D98-8CB9-4236-B271-B13554A815EB}
+		{849DC5B0-E411-4BC7-A111-12B70B39237B} = {598D34C7-6E92-48F5-AAF8-F29BA1E32A6D}
+	EndGlobalSection
+EndGlobal
