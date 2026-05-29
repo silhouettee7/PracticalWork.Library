@@ -11,7 +11,7 @@ services:
     ports:
       - "5437:5432"
     volumes:
-      - postgres_library_data:/var/lib/postgresql/data
+      - postgres_library_data:/var/lib/postgresql
       
   postgres-reports:
     image: postgres:latest
@@ -23,19 +23,19 @@ services:
     ports:
       - "5438:5432"
     volumes:
-      - postgres_reports_data:/var/lib/postgresql/data
+      - postgres_reports_data:/var/lib/postgresql
   
   postgres-hangfire:
     image: postgres:latest
     container_name: hangfire-postgres
     environment:
-      POSTGRES_DB: hangfire
+      POSTGRES_DB: jobs
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
       - "5439:5432"
     volumes:
-      - postgres_hangfire_data:/var/lib/postgresql/data
+      - postgres_hangfire_data:/var/lib/postgresql
       
   minio:
     image: minio/minio
