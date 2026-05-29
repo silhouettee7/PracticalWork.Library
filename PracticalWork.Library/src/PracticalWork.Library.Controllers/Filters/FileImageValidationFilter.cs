@@ -6,14 +6,8 @@ namespace PracticalWork.Library.Controllers.Filters;
 
 public class FileImageValidationFilter: IAsyncActionFilter
 {
-    private readonly long _maxFileSize;
-    private readonly string[] _allowedExtensions;
-
-    public FileImageValidationFilter(long maxFileSizeBytes, params string[] allowedExtensions)
-    {
-        _maxFileSize = maxFileSizeBytes;
-        _allowedExtensions = allowedExtensions;
-    }
+    private readonly long _maxFileSizeBytes = 1024 * 1024 * 5;
+    private readonly string[] _allowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
 
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
@@ -33,9 +27,9 @@ public class FileImageValidationFilter: IAsyncActionFilter
             throw new ValidationException("Файл не может быть пустым");
         }
 
-        if (file.Length > _maxFileSize)
+        if (file.Length > _maxFileSizeBytes)
         {
-            throw new ValidationException($"Размер файла не должен превышать {_maxFileSize / 1024 / 1024}MB");
+            throw new ValidationException($"Размер файла не должен превышать {_maxFileSizeBytes / 1024 / 1024}MB");
         }
         
         var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();

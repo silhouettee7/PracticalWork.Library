@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Contracts.v1.Books.Request;
 using PracticalWork.Library.Contracts.v1.Books.Response;
+using PracticalWork.Library.Controllers.Filters;
 using PracticalWork.Library.Controllers.Mappers.v1;
 using PracticalWork.Library.Enums;
 
@@ -70,6 +71,7 @@ public class BooksController : Controller
     /// </summary>
     [HttpPost]
     [Route("/details")]
+    [ServiceFilter<FileImageValidationFilter>]
     [Produces("application/json")]
     [ProducesResponseType(200)]
     [ProducesResponseType(400)]

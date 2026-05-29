@@ -10,7 +10,7 @@ namespace PracticalWork.Report.Data.PostgreSql.Migrator;
 [UsedImplicitly]
 public class Program
 {
-    private const string AppName = "PracticalWork.Library.Data.PostgreSql.Migrator";
+    private const string AppName = "PracticalWork.Report.Data.PostgreSql.Migrator";
 
     private static IConfiguration Configuration { get; set; } 
 

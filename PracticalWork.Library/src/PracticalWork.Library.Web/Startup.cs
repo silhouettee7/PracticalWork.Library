@@ -47,7 +47,6 @@ public class Startup
         services.AddMvc(opt =>
             {
                 opt.Filters.Add<DomainExceptionFilter<AppException>>();
-                opt.Filters.Add<FileImageValidationFilter>();
             })
             .AddApi()
             .AddControllersAsServices()

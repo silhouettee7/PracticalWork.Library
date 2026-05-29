@@ -30,5 +30,7 @@ builder.Services.AddReportsPostgreSqlStorage(cfg =>
 builder.Services.AddMinioFileStorage(builder.Configuration);
 builder.Services.AddCache(builder.Configuration);
 
+builder.Services.AddSingleton(TimeProvider.System);
+
 var host = builder.Build();
 host.Run();
