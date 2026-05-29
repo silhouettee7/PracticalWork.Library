@@ -1,4 +1,8 @@
 using System.Diagnostics;
+using Domain.Abstractions.Services;
+using Domain.Enums;
+using Domain.Models;
+using Domain.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PracticalWork.Library.Abstractions.Services;
@@ -13,7 +17,7 @@ namespace PracticalWork.Library.Services;
 public class ArchiveService: IArchiveService
 {
     private readonly IBookRepository _bookRepository;
-    private readonly IReportRepository _reportRepository;
+    private readonly IAdministrationReportRepository _administrationReportRepository;
     private readonly IBookService _bookService;
     private readonly ILogger<ArchiveService> _logger;
     private readonly IReportGenerateService _reportGenerateService;
@@ -28,7 +32,7 @@ public class ArchiveService: IArchiveService
         ILogger<ArchiveService> logger,
         IFileStorageService fileStorageService,
         IOptionsMonitor<MinioOptions> minioOptions, 
-        IReportRepository reportRepository,
+        IAdministrationReportRepository administrationReportRepository,
         TimeProvider timeProvider, 
         IOptionsMonitor<BackgroundReportsOptions> reportsOptions)
     {
@@ -37,7 +41,7 @@ public class ArchiveService: IArchiveService
         _reportGenerateService = reportGenerateService;
         _logger = logger;
         _fileStorageService = fileStorageService;
-        _reportRepository = reportRepository;
+        _administrationReportRepository = administrationReportRepository;
         _minioOptions = minioOptions.CurrentValue;
         _timeProvider = timeProvider;
         _reportsOptions = reportsOptions.CurrentValue;
@@ -122,7 +126,7 @@ public class ArchiveService: IArchiveService
         var filePath = await _fileStorageService.GetFileLinkAsync(
             _minioOptions.ArchiveBooksBucketName,report.FileName, cancellationToken);
         
-        var reportSave = new Report
+        var reportSave = new AdministrationReport
         {
             CreatedAt = _timeProvider.GetUtcNow().UtcDateTime,
             GeneratedAt = _timeProvider.GetUtcNow().UtcDateTime,
@@ -130,6 +134,6 @@ public class ArchiveService: IArchiveService
             Name = report.FileName,
             FilePath = filePath
         };
-        await _reportRepository.SaveReportAsync(reportSave, cancellationToken);
+        await _administrationReportRepository.SaveReportAsync(reportSave, cancellationToken);
     }
 }

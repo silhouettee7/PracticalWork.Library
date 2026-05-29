@@ -1,3 +1,4 @@
+using Domain.Events;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PracticalWork.Library.Abstractions.Services;
@@ -7,12 +8,12 @@ using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.MessageBroker.Rabbit.Consumers;
 
-public class SystemActivityConsumer<T>: RabbitMConsumer<T> where T: BaseEvent
+public class SystemActivityConsumer<T>: RabbitMqConsumer<T> where T: BaseEvent
 {
     private readonly IServiceScopeFactory _serviceScopeFactory;
     
     public SystemActivityConsumer(
-        ILogger<RabbitMConsumer<T>> logger, 
+        ILogger<RabbitMqConsumer<T>> logger, 
         IRabbitMqChannelPool channelPool,
         IServiceScopeFactory serviceScopeFactory) 
         : base(logger, channelPool)

@@ -5,13 +5,14 @@ using PracticalWork.Library.Cache.Redis;
 using PracticalWork.Library.Controllers;
 using PracticalWork.Library.Data.Minio;
 using PracticalWork.Library.Data.PostgreSql;
-using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Web.Configuration;
 using System.Text.Json.Serialization;
+using Domain.Exceptions;
 using Hangfire;
 using Hangfire.PostgreSql;
 using PracticalWork.Library.Abstractions.Jobs;
 using PracticalWork.Library.BackgroundTasks.Jobs;
+using PracticalWork.Library.Controllers.Filters;
 using PracticalWork.Library.Email;
 using PracticalWork.Library.MessageBroker;
 using PracticalWork.Library.Options;
@@ -61,6 +62,7 @@ public class Startup
         services.AddMvc(opt =>
             {
                 opt.Filters.Add<DomainExceptionFilter<AppException>>();
+                opt.Filters.Add<FileImageValidationFilter>();
             })
             .AddApi()
             .AddControllersAsServices()

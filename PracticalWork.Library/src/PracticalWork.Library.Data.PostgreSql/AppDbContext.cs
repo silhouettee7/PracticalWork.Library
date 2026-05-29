@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Domain.Abstractions.Storage;
+using Microsoft.EntityFrameworkCore;
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Data.PostgreSql.Entities;
 
@@ -56,4 +57,5 @@ public sealed class AppDbContext : DbContext
     internal DbSet<ScientificBookEntity> ScientificBooks { get; set; }
     internal DbSet<ReaderEntity> Readers { get; set; }
     internal DbSet<BookBorrowEntity> BookBorrows { get; set; }
+    internal DbSet<AdministrationReportEntity> AdministrationReports { get; set; }
 }

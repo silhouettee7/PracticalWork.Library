@@ -1,3 +1,6 @@
+using Domain.Abstractions.MessageBroker;
+using Domain.Events;
+using Domain.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PracticalWork.Library.Abstractions.MessageBroker;

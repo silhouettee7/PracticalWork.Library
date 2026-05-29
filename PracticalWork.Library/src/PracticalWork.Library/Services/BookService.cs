@@ -1,12 +1,15 @@
-﻿using Microsoft.Extensions.Options;
-using PracticalWork.Library.Abstractions.MessageBroker;
+﻿using Domain.Abstractions.MessageBroker;
+using Domain.Abstractions.Services;
+using Domain.Events;
+using Domain.Exceptions;
+using Domain.Models;
+using Domain.Options;
+using Microsoft.Extensions.Options;
 using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Enums;
-using PracticalWork.Library.Events;
-using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Models;
-using PracticalWork.Library.Options;
+using BookServiceException = PracticalWork.Library.Exceptions.BookServiceException;
 
 namespace PracticalWork.Library.Services;
 

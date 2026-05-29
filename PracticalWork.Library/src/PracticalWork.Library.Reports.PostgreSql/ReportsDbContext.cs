@@ -1,3 +1,4 @@
+using Domain.Abstractions.Storage;
 using Microsoft.EntityFrameworkCore;
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Reports.PostgreSql.Entities;

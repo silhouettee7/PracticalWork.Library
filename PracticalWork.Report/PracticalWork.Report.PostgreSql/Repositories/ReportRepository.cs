@@ -1,7 +1,7 @@
-using Domain.Enums;
 using Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using PracticalWork.Report.Abstractions.Storage;
+using PracticalWork.Report.Enums;
 using PracticalWork.Report.PostgreSql.Entities;
 
 namespace PracticalWork.Report.PostgreSql.Repositories;

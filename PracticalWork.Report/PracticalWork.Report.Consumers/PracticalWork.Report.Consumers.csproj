@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>dotnet-PracticalWork.Report.Consumers-69141066-a3af-40e1-bdbe-9a22ac5b5a61</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="MessageBroker" />
+      <PackageReference Include="Microsoft.Extensions.Hosting" />
+      <PackageReference Include="Npgsql" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\PracticalWork.Report.Application\PracticalWork.Report.Application.csproj" />
+      <ProjectReference Include="..\PracticalWork.Report.PostgreSql\PracticalWork.Report.PostgreSql.csproj" />
+    </ItemGroup>
+</Project>

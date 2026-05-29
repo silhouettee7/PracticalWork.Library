@@ -1,4 +1,5 @@
-﻿using PracticalWork.Library.Dtos;
+﻿using Domain.Models;
+using PracticalWork.Library.Dtos;
 using PracticalWork.Library.Enums;
 using PracticalWork.Library.Models;
 

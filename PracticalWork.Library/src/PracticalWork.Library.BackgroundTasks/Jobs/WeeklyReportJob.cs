@@ -17,7 +17,7 @@ public class WeeklyReportJob: AbstractLibraryJob
     
     public override void ExecuteCronJob(string cron)
     {
-        _recurringJobManager.AddOrUpdate<IReportService>(JobName, s => 
+        _recurringJobManager.AddOrUpdate<IAdministrationReportService>(JobName, s => 
             s.CreateReportForAdministration(CancellationToken.None), cron);
     }
 }

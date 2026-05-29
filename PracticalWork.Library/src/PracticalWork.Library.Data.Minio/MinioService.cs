@@ -1,4 +1,6 @@
 using System.Runtime.InteropServices.JavaScript;
+using Domain.Abstractions.Services;
+using Domain.Options;
 using Microsoft.Extensions.Options;
 using Minio;
 using Minio.DataModel.Args;

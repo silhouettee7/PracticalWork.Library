@@ -1,3 +1,4 @@
+using Domain.Models;
 using PracticalWork.Library.Dtos;
 using PracticalWork.Library.Models;
 

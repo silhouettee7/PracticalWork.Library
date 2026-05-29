@@ -1,5 +1,5 @@
 using Domain.Abstractions.Storage;
-using Domain.Enums;
+using PracticalWork.Report.Enums;
 
 namespace PracticalWork.Report.PostgreSql.Entities;
 

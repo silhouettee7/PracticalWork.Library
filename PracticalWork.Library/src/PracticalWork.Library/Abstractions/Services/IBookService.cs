@@ -1,4 +1,5 @@
-﻿using PracticalWork.Library.Enums;
+﻿using Domain.Models;
+using PracticalWork.Library.Enums;
 using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.Abstractions.Services;

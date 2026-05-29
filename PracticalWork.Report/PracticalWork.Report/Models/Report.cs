@@ -1,4 +1,4 @@
-using Domain.Enums;
+using ReportStatus = PracticalWork.Report.Enums.ReportStatus;
 
 namespace PracticalWork.Report.Models;
 

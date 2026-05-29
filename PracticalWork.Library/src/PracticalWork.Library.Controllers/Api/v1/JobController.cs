@@ -40,7 +40,7 @@ public class JobController: Controller
     public IActionResult Report(IServiceProvider serviceProvider)
     {
         var scope = serviceProvider.CreateScope();
-        var reportService = scope.ServiceProvider.GetRequiredService<IReportService>();
+        var reportService = scope.ServiceProvider.GetRequiredService<IAdministrationReportService>();
         reportService.CreateReportForAdministration(CancellationToken.None);
         return Ok();
     }

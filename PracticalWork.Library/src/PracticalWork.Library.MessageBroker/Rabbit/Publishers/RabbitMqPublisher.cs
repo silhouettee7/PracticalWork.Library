@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using Domain.Abstractions.MessageBroker;
 using Microsoft.Extensions.Logging;
 using PracticalWork.Library.Abstractions.MessageBroker;
 using PracticalWork.Library.MessageBroker.Rabbit.Abstractions;

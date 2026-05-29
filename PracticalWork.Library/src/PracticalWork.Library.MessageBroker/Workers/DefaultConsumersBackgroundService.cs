@@ -1,3 +1,4 @@
+using Domain.Abstractions.MessageBroker;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PracticalWork.Library.Abstractions.MessageBroker;

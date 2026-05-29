@@ -10,6 +10,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "utils", "utils", "{598D34C7
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PracticalWork.Report.Data.PostgreSql.Migrator", "PracticalWork.Report.Data.PostgreSql.Migrator\PracticalWork.Report.Data.PostgreSql.Migrator.csproj", "{849DC5B0-E411-4BC7-A111-12B70B39237B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PracticalWork.Report.Application", "PracticalWork.Report.Application\PracticalWork.Report.Application.csproj", "{338E7A3E-D31C-4130-A790-D6D7B8858076}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PracticalWork.Report.Consumers", "PracticalWork.Report.Consumers\PracticalWork.Report.Consumers.csproj", "{37280895-2963-4108-AF42-6E941F893D7C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PracticalWork.Report.Contracts", "PracticalWork.Report.Contracts\PracticalWork.Report.Contracts.csproj", "{5B764822-1D1F-4658-AB6B-BCC96F2607FD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PracticalWork.Report.Controllers", "PracticalWork.Report.Controllers\PracticalWork.Report.Controllers.csproj", "{E6033B7D-CDFC-4365-8A50-A3B1A10C1B45}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PracticalWork.Report.Web", "PracticalWork.Report.Web\PracticalWork.Report.Web.csproj", "{0B0B2A87-BA47-4F58-A966-53373B47C56A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,6 +38,26 @@ Global
 		{849DC5B0-E411-4BC7-A111-12B70B39237B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{849DC5B0-E411-4BC7-A111-12B70B39237B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{849DC5B0-E411-4BC7-A111-12B70B39237B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{338E7A3E-D31C-4130-A790-D6D7B8858076}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{338E7A3E-D31C-4130-A790-D6D7B8858076}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{338E7A3E-D31C-4130-A790-D6D7B8858076}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{338E7A3E-D31C-4130-A790-D6D7B8858076}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37280895-2963-4108-AF42-6E941F893D7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37280895-2963-4108-AF42-6E941F893D7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37280895-2963-4108-AF42-6E941F893D7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37280895-2963-4108-AF42-6E941F893D7C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B764822-1D1F-4658-AB6B-BCC96F2607FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B764822-1D1F-4658-AB6B-BCC96F2607FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B764822-1D1F-4658-AB6B-BCC96F2607FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B764822-1D1F-4658-AB6B-BCC96F2607FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6033B7D-CDFC-4365-8A50-A3B1A10C1B45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6033B7D-CDFC-4365-8A50-A3B1A10C1B45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6033B7D-CDFC-4365-8A50-A3B1A10C1B45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6033B7D-CDFC-4365-8A50-A3B1A10C1B45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B0B2A87-BA47-4F58-A966-53373B47C56A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B0B2A87-BA47-4F58-A966-53373B47C56A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B0B2A87-BA47-4F58-A966-53373B47C56A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B0B2A87-BA47-4F58-A966-53373B47C56A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A7CB957B-E64B-4D5F-92D5-A5000783D40D} = {D0C62D98-8CB9-4236-B271-B13554A815EB}

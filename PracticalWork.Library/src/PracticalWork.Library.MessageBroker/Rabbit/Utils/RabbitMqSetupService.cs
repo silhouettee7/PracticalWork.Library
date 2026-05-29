@@ -1,3 +1,4 @@
+using Domain.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PracticalWork.Library.MessageBroker.Rabbit.Abstractions;

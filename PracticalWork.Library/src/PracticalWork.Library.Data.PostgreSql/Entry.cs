@@ -15,11 +15,12 @@ public static class Entry
     public static IServiceCollection AddPostgreSqlStorage(this IServiceCollection serviceCollection, Action<DbContextOptionsBuilder> optionsAction)
     {
         serviceCollection.AddDbContext<AppDbContext>(optionsAction ?? DefaultOptionsAction, optionsLifetime: ServiceLifetime.Scoped);
-
+        
         serviceCollection.AddScoped<IBookRepository, BookRepository>();
         serviceCollection.AddScoped<IBorrowRepository, BorrowRepository>();
         serviceCollection.AddScoped<IReaderRepository, ReaderRepository>();
-
+        serviceCollection.AddScoped<IAdministrationReportRepository, AdministrationReportRepository>();
+        
         return serviceCollection;
     }
 }

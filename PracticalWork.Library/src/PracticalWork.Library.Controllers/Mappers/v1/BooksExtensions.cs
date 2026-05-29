@@ -1,4 +1,5 @@
-﻿using PracticalWork.Library.Contracts.v1.Abstracts;
+﻿using Domain.Models;
+using PracticalWork.Library.Contracts.v1.Abstracts;
 using PracticalWork.Library.Contracts.v1.Books.Request;
 using PracticalWork.Library.Contracts.v1.Books.Response;
 using PracticalWork.Library.Enums;

@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Packages -->
+    <PackageVersion Include="Domain" Version="1.0.4" />
     <PackageVersion Include="Hangfire" Version="1.8.23" />
     <PackageVersion Include="Hangfire.PostgreSql" Version="1.21.1" />
     <PackageVersion Include="MailKit" Version="4.16.0" />

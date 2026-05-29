@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Domain.Models;
 using Microsoft.AspNetCore.Mvc;
 using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Contracts.v1.Books.Request;

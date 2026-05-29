@@ -1,5 +1,5 @@
-using Domain.Enums;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using PracticalWork.Report.Enums;
 using PracticalWork.Report.PostgreSql.Entities;
 
 namespace PracticalWork.Report.PostgreSql.Configurations;
