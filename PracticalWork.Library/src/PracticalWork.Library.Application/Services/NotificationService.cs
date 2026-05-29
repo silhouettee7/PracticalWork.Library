@@ -13,7 +13,6 @@ public class NotificationService: INotificationService
 {
     private readonly IBorrowRepository _borrowRepository;
     private readonly IEmailService _emailService;
-    private readonly EmailOptions _emailOptions;
     private readonly EmailMessagesOptions _emailMessagesOptions;
     private readonly SchedulerOptions _schedulerOptions;
     private readonly ILogger<NotificationService> _logger;
@@ -21,7 +20,6 @@ public class NotificationService: INotificationService
     
     public NotificationService(IBorrowRepository borrowRepository,
         IEmailService emailService,
-        IOptionsMonitor<EmailOptions> emailOptions,
         ILogger<NotificationService> logger, 
         TimeProvider timeProvider, 
         IOptionsMonitor<EmailMessagesOptions> emailMessagesOptions, 
@@ -29,7 +27,6 @@ public class NotificationService: INotificationService
     {
         _borrowRepository = borrowRepository;
         _emailService = emailService;
-        _emailOptions = emailOptions.CurrentValue;
         _logger = logger;
         _timeProvider = timeProvider;
         _schedulerOptions = schedulerOptions.CurrentValue;
