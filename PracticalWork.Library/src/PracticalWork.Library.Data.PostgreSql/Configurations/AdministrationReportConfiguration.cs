@@ -1,14 +1,12 @@
-using Domain.Enums;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using PracticalWork.Library.Data.PostgreSql.Entities;
 using PracticalWork.Library.Enums;
-using PracticalWork.Library.Reports.PostgreSql.Entities;
 
-namespace PracticalWork.Library.Reports.PostgreSql.Configurations;
+namespace PracticalWork.Library.Data.PostgreSql.Configurations;
 
-public class ReportEntityConfiguration: EntityConfigurationBase<ReportEntity>
+internal class AdministrationReportConfiguration: EntityConfigurationBase<AdministrationReportEntity>
 {
-    public override void Configure(EntityTypeBuilder<ReportEntity> builder)
+    public override void Configure(EntityTypeBuilder<AdministrationReportEntity> builder)
     {
         base.Configure(builder);
         builder.Property(e => e.Name)
@@ -20,6 +18,6 @@ public class ReportEntityConfiguration: EntityConfigurationBase<ReportEntity>
         builder.Property(e => e.Status)
             .HasConversion<string>(
                 rs => rs.ToString(),
-                s => Enum.Parse<ReportStatus>(s));
+                s => Enum.Parse<AdministrationReportStatus>(s));
     }
 }

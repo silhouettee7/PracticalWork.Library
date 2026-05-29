@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using Domain.Abstractions.Services;
-using Domain.Enums;
 using Domain.Models;
 using Domain.Options;
 using Microsoft.Extensions.Logging;
@@ -130,7 +129,7 @@ public class ArchiveService: IArchiveService
         {
             CreatedAt = _timeProvider.GetUtcNow().UtcDateTime,
             GeneratedAt = _timeProvider.GetUtcNow().UtcDateTime,
-            Status = ReportStatus.Generated,
+            Status = AdministrationReportStatus.Generated,
             Name = report.FileName,
             FilePath = filePath
         };

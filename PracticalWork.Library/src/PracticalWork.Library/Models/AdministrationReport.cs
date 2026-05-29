@@ -1,4 +1,5 @@
-using Domain.Enums;
+
+using PracticalWork.Library.Enums;
 
 namespace PracticalWork.Library.Models;
 
@@ -19,7 +20,7 @@ public class AdministrationReport
     /// <summary>
     /// Статус готовности отчета
     /// </summary>
-    public ReportStatus Status { get; set; } = ReportStatus.InProgress;
+    public AdministrationReportStatus Status { get; set; } = AdministrationReportStatus.InProgress;
 
     public DateTime CreatedAt { get; set; }
 }

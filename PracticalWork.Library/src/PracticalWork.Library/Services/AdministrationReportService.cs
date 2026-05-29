@@ -1,10 +1,10 @@
 using Domain.Abstractions.Services;
-using Domain.Enums;
 using Domain.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Abstractions.Storage;
+using PracticalWork.Library.Enums;
 using PracticalWork.Library.Models;
 using PracticalWork.Library.Options;
 
@@ -136,7 +136,7 @@ public class AdministrationReportService: IAdministrationReportService
         var report = new AdministrationReport
         {
             CreatedAt = _timeProvider.GetUtcNow().UtcDateTime,
-            Status = ReportStatus.Generated,
+            Status = AdministrationReportStatus.Generated,
             Name = generatedReport.FileName,
             GeneratedAt = generatedReport.GeneratedAt,
             FilePath = reportUrl

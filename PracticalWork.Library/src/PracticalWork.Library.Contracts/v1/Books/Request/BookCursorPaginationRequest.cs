@@ -1,3 +1,4 @@
+using Contracts.v1.Abstract;
 using PracticalWork.Library.Contracts.v1.Abstracts;
 using PracticalWork.Library.Contracts.v1.Enums;
 

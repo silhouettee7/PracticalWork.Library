@@ -14,8 +14,8 @@ internal abstract class EntityConfigurationBase<TEntity> : IEntityTypeConfigurat
             .ValueGeneratedOnAdd();
 
         builder.Property(e => e.CreatedAt)
-            .HasColumnType("timestamp with time zone") // То есть, UTC в современном Postgres.
-            .HasDefaultValueSql("NOW()") // `now()` Генерит значение типа `timestamp with timezone` == UTC.
+            .HasColumnType("timestamp with time zone")
+            .HasDefaultValueSql("NOW()") 
             .ValueGeneratedOnAdd();
 
         builder.Property(e => e.UpdatedAt)

@@ -1,22 +1,21 @@
 ﻿using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using PracticalWork.Library.Cache.Redis;
 using PracticalWork.Library.Controllers;
-using PracticalWork.Library.Data.Minio;
 using PracticalWork.Library.Data.PostgreSql;
 using PracticalWork.Library.Web.Configuration;
 using System.Text.Json.Serialization;
+using Data.Minio;
 using Domain.Exceptions;
 using Hangfire;
 using Hangfire.PostgreSql;
+using MessageBroker;
 using PracticalWork.Library.Abstractions.Jobs;
 using PracticalWork.Library.BackgroundTasks.Jobs;
 using PracticalWork.Library.Controllers.Filters;
 using PracticalWork.Library.Email;
-using PracticalWork.Library.MessageBroker;
 using PracticalWork.Library.Options;
-using PracticalWork.Library.Reports.PostgreSql;
+using Redis;
 
 namespace PracticalWork.Library.Web;
 
@@ -45,19 +44,6 @@ public class Startup
 
             cfg.UseNpgsql(npgsqlDataSource);
         });
-
-        services.AddReportsPostgreSqlStorage(cfg =>
-            {
-                var connectionString = Configuration
-                    .GetSection("App")
-                    .GetConnectionString(nameof(ReportsDbContext));
-                var npgsqlDataSource = new NpgsqlDataSourceBuilder(connectionString)
-                    .EnableDynamicJson()
-                    .Build();
-
-                cfg.UseNpgsql(npgsqlDataSource);
-            }    
-        );
 
         services.AddMvc(opt =>
             {

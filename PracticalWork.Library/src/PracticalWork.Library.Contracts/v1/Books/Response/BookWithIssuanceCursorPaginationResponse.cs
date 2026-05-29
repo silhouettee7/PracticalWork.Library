@@ -1,3 +1,4 @@
+using Contracts.v1.Abstract;
 using PracticalWork.Library.Contracts.v1.Abstracts;
 
 namespace PracticalWork.Library.Contracts.v1.Books.Response;
