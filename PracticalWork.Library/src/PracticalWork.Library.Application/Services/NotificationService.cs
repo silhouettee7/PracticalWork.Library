@@ -7,7 +7,7 @@ using PracticalWork.Library.Extensions;
 using PracticalWork.Library.Models;
 using PracticalWork.Library.Options;
 
-namespace PracticalWork.Library.Services;
+namespace PracticalWork.Library.Application.Services;
 
 public class NotificationService: INotificationService
 {

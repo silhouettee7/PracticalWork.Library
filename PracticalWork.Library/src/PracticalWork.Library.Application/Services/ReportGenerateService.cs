@@ -4,7 +4,7 @@ using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Attributes;
 using PracticalWork.Library.Models;
 
-namespace PracticalWork.Library.Services;
+namespace PracticalWork.Library.Application.Services;
 
 public class ReportGenerateService: IReportGenerateService
 {

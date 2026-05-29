@@ -1,7 +1,6 @@
 using Domain.Abstractions.MessageBroker;
 using Domain.Abstractions.Services;
 using Domain.Events;
-using Domain.Exceptions;
 using Domain.Models;
 using Domain.Options;
 using Microsoft.Extensions.Options;
@@ -12,7 +11,7 @@ using PracticalWork.Library.Enums;
 using PracticalWork.Library.Models;
 using LibraryServiceException = PracticalWork.Library.Exceptions.LibraryServiceException;
 
-namespace PracticalWork.Library.Services;
+namespace PracticalWork.Library.Application.Services;
 
 public class LibraryService: ILibraryService
 {

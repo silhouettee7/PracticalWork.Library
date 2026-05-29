@@ -35,11 +35,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\PracticalWork.Library.Application\PracticalWork.Library.Application.csproj" />
     <ProjectReference Include="..\PracticalWork.Library.Controllers\PracticalWork.Library.Controllers.csproj" />
     <ProjectReference Include="..\PracticalWork.Library.Data.PostgreSql\PracticalWork.Library.Data.PostgreSql.csproj" />
     <ProjectReference Include="..\PracticalWork.Library.Email\PracticalWork.Library.Email.csproj" />
     <ProjectReference Include="..\PracticalWork.Library\PracticalWork.Library.csproj" />
-    <ProjectReference Include="..\PracticalWork.Library.BackgroundTasks\PracticalWork.Library.BackgroundTasks.csproj" />
   </ItemGroup>
 
 </Project>

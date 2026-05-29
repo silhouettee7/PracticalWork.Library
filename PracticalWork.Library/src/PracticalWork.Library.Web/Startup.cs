@@ -11,10 +11,9 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using MessageBroker;
 using PracticalWork.Library.Abstractions.Jobs;
-using PracticalWork.Library.BackgroundTasks.Jobs;
+using PracticalWork.Library.Application;
 using PracticalWork.Library.Controllers.Filters;
 using PracticalWork.Library.Email;
-using PracticalWork.Library.Options;
 using Redis;
 
 namespace PracticalWork.Library.Web;
@@ -65,7 +64,7 @@ public class Startup
             c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "PracticalWork.Library.Controllers.xml"));
         });
 
-        services.AddBaseDomain();
+        services.AddDomain();
         services.AddCache(Configuration);
         services.AddMinioFileStorage(Configuration);
         services.AddEmail(Configuration);
@@ -78,16 +77,11 @@ public class Startup
                 opt.UseNpgsqlConnection(Configuration
                     .GetSection("App")
                     .GetConnectionString("Hangfire"))));
-        
-        services.AddSingleton<ILibraryJob, ArchiveJob>();
-        services.AddSingleton<ILibraryJob, WeeklyReportJob>();
-        services.AddSingleton<ILibraryJob, ReturnRemindersJob>();
+
+        services.AddJobs();
+        services.AddJobsOptions(Configuration);
         
         services.AddSingleton(TimeProvider.System);
-        services.AddBackgroundTasksDomain();
-        services.Configure<SchedulerOptions>(Configuration.GetSection("App:Scheduler"));
-        services.Configure<EmailMessagesOptions>(Configuration.GetSection("App:EmailMessages"));
-        services.Configure<BackgroundReportsOptions>(Configuration.GetSection("App:BackgroundReports"));
     }
 
     [UsedImplicitly]

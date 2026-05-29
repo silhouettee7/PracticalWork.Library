@@ -4,10 +4,9 @@ using Hangfire.PostgreSql;
 using MessageBroker;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using PracticalWork.Library;
+using PracticalWork.Library.Application;
 using PracticalWork.Library.Data.PostgreSql;
 using PracticalWork.Library.Email;
-using PracticalWork.Library.Options;
 using Redis;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -35,9 +34,7 @@ services.AddPostgreSqlStorage(cfg =>
     cfg.UseNpgsql(npgsqlDataSource);
 });
 
-services.Configure<SchedulerOptions>(configuration.GetSection("App:Scheduler"));
-services.Configure<EmailMessagesOptions>(configuration.GetSection("App:EmailMessages"));
-services.Configure<BackgroundReportsOptions>(configuration.GetSection("App:BackgroundReports"));
+services.AddJobsOptions(builder.Configuration);
 
 services.AddHangfire(config => 
     config.UsePostgreSqlStorage(opt => 

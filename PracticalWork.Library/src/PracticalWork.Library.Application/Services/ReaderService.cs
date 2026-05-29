@@ -1,7 +1,6 @@
 using Domain.Abstractions.MessageBroker;
 using Domain.Abstractions.Services;
 using Domain.Events;
-using Domain.Exceptions;
 using Domain.Options;
 using Microsoft.Extensions.Options;
 using PracticalWork.Library.Abstractions.Services;
@@ -9,7 +8,7 @@ using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Models;
 using ReaderServiceException = PracticalWork.Library.Exceptions.ReaderServiceException;
 
-namespace PracticalWork.Library.Services;
+namespace PracticalWork.Library.Application.Services;
 
 public class ReaderService: IReaderService
 {

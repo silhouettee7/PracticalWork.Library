@@ -1,7 +1,7 @@
 using Hangfire;
 using PracticalWork.Library.Abstractions.Jobs;
 
-namespace PracticalWork.Library.BackgroundTasks.Jobs;
+namespace PracticalWork.Library.Application.Jobs;
 
 public abstract class AbstractLibraryJob: ILibraryJob
 {

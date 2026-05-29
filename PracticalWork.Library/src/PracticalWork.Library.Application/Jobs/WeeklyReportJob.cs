@@ -1,8 +1,7 @@
 using Hangfire;
-using PracticalWork.Library.Abstractions.Jobs;
 using PracticalWork.Library.Abstractions.Services;
 
-namespace PracticalWork.Library.BackgroundTasks.Jobs;
+namespace PracticalWork.Library.Application.Jobs;
 
 public class WeeklyReportJob: AbstractLibraryJob
 {

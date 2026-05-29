@@ -8,7 +8,7 @@ using PracticalWork.Library.Enums;
 using PracticalWork.Library.Models;
 using PracticalWork.Library.Options;
 
-namespace PracticalWork.Library.Services;
+namespace PracticalWork.Library.Application.Services;
 
 public class AdministrationReportService: IAdministrationReportService
 {

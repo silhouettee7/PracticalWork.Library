@@ -5,9 +5,5 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Domain" />
-    <PackageReference Include="JetBrains.Annotations" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
   </ItemGroup>
 </Project>
