@@ -102,12 +102,12 @@ public class ReaderService: IReaderService
         return (false, readerWithBorrowBooks.BorrowBooks);
     }
 
-    public async Task<IReadOnlyList<BorrowedBook>> GetAllBorrowBooks(
+    public async Task<IReadOnlyList<BookBorrowWIthDetailInfo>> GetAllBorrowBooks(
         Guid readerId, CancellationToken cancellationToken)
     {
         var cacheVersion = await _cacheService.GetCurrentCacheVersion(_readersCacheVersionKey);
         var cacheKey = _cacheService.GenerateCacheKey(_readerBooksCachePrefix, cacheVersion, null);
-        var cachedResult = await _cacheService.GetAsync<IReadOnlyList<BorrowedBook>>(cacheKey);
+        var cachedResult = await _cacheService.GetAsync<IReadOnlyList<BookBorrowWIthDetailInfo>>(cacheKey);
         if (cachedResult != null)
         {
             return cachedResult;

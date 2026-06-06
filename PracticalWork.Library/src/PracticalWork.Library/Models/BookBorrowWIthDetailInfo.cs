@@ -5,7 +5,7 @@ namespace PracticalWork.Library.Models;
 /// <summary>
 /// Выдача книги с подробной информацией
 /// </summary>
-public class BorrowedBook
+public class BookBorrowWIthDetailInfo
 {
     /// <summary>Название книги</summary>
     public string Title { get; set; }

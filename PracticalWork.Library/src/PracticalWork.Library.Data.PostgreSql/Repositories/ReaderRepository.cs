@@ -84,7 +84,7 @@ public class ReaderRepository: IReaderRepository
         return reader;
     }
 
-    public async Task<(bool isActive, IReadOnlyList<BorrowedBook> books)> GetReadersBorrowBooks(Guid id,
+    public async Task<(bool isActive, IReadOnlyList<BookBorrowWIthDetailInfo> books)> GetReadersBorrowBooks(Guid id,
         CancellationToken cancellationToken)
     {
         var readerEntity = await _appDbContext.Readers
@@ -96,7 +96,7 @@ public class ReaderRepository: IReaderRepository
             ?? throw new EntityNotFoundException($"Карточка:{id} не нашлась");
         
         return (readerEntity.IsActive,readerEntity.BorrowedRecords
-            .Select(b => new BorrowedBook 
+            .Select(b => new BookBorrowWIthDetailInfo 
             {
                 Title = b.Book.Title,
                 Authors = b.Book.Authors,

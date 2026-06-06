@@ -11,7 +11,7 @@ using PracticalWork.Library.Application.Services;
 using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Models;
 
-namespace PracticalWork.Library.Tests.Services;
+namespace PracticalWork.Library.Tests.DomainServices;
 
 public class ReaderServiceTests
 {
@@ -543,7 +543,7 @@ public class ReaderServiceTests
         // Arrange
         var readerId = _fixture.Create<Guid>();
         var cachedBooks = _fixture
-            .Build<BorrowedBook>()
+            .Build<BookBorrowWIthDetailInfo>()
             .Without(b => b.BorrowDate)
             .Without(b => b.DueDate)
             .Without(b => b.ReturnDate)
@@ -561,7 +561,7 @@ public class ReaderServiceTests
             .Returns(cacheKey);
         
         _cacheServiceMock
-            .Setup(x => x.GetAsync<IReadOnlyList<BorrowedBook>>(cacheKey))
+            .Setup(x => x.GetAsync<IReadOnlyList<BookBorrowWIthDetailInfo>>(cacheKey))
             .ReturnsAsync(cachedBooks);
         
         // Act
@@ -586,7 +586,7 @@ public class ReaderServiceTests
         // Arrange
         var readerId = _fixture.Create<Guid>();
         var expectedBooks = _fixture
-            .Build<BorrowedBook>()
+            .Build<BookBorrowWIthDetailInfo>()
             .Without(b => b.BorrowDate)
             .Without(b => b.DueDate)
             .Without(b => b.ReturnDate)
@@ -604,8 +604,8 @@ public class ReaderServiceTests
             .Returns(cacheKey);
         
         _cacheServiceMock
-            .Setup(x => x.GetAsync<IReadOnlyList<BorrowedBook>>(cacheKey))
-            .ReturnsAsync((IReadOnlyList<BorrowedBook>)null!);
+            .Setup(x => x.GetAsync<IReadOnlyList<BookBorrowWIthDetailInfo>>(cacheKey))
+            .ReturnsAsync((IReadOnlyList<BookBorrowWIthDetailInfo>)null!);
         
         _readerRepositoryMock
             .Setup(x => x.GetReadersBorrowBooks(readerId, It.IsAny<CancellationToken>()))
@@ -624,7 +624,7 @@ public class ReaderServiceTests
         _cacheServiceMock.Verify(
             x => x.SetAsync(
                 cacheKey,
-                expectedBooks as IReadOnlyList<BorrowedBook>,
+                expectedBooks as IReadOnlyList<BookBorrowWIthDetailInfo>,
                 _redisReaderBooksTtl),
             Times.Once);
     }
@@ -646,12 +646,12 @@ public class ReaderServiceTests
             .Returns(cacheKey);
         
         _cacheServiceMock
-            .Setup(x => x.GetAsync<IReadOnlyList<BorrowedBook>>(cacheKey))
-            .ReturnsAsync((IReadOnlyList<BorrowedBook>)null!);
+            .Setup(x => x.GetAsync<IReadOnlyList<BookBorrowWIthDetailInfo>>(cacheKey))
+            .ReturnsAsync((IReadOnlyList<BookBorrowWIthDetailInfo>)null!);
         
         _readerRepositoryMock
             .Setup(x => x.GetReadersBorrowBooks(readerId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((isActive: false, books: new List<BorrowedBook>()));
+            .ReturnsAsync((isActive: false, books: new List<BookBorrowWIthDetailInfo>()));
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ReaderServiceException>(
@@ -669,7 +669,7 @@ public class ReaderServiceTests
     {
         // Arrange
         var readerId = _fixture.Create<Guid>();
-        var emptyBooks = new List<BorrowedBook>();
+        var emptyBooks = new List<BookBorrowWIthDetailInfo>();
         var cacheVersion = _fixture.Create<long>();
         var cacheKey = _fixture.Create<string>();
         
@@ -682,8 +682,8 @@ public class ReaderServiceTests
             .Returns(cacheKey);
         
         _cacheServiceMock
-            .Setup(x => x.GetAsync<IReadOnlyList<BorrowedBook>>(cacheKey))
-            .ReturnsAsync((IReadOnlyList<BorrowedBook>)null!);
+            .Setup(x => x.GetAsync<IReadOnlyList<BookBorrowWIthDetailInfo>>(cacheKey))
+            .ReturnsAsync((IReadOnlyList<BookBorrowWIthDetailInfo>)null!);
         
         _readerRepositoryMock
             .Setup(x => x.GetReadersBorrowBooks(readerId, It.IsAny<CancellationToken>()))
@@ -698,7 +698,7 @@ public class ReaderServiceTests
         _cacheServiceMock.Verify(
             x => x.SetAsync(
                 cacheKey,
-                emptyBooks as IReadOnlyList<BorrowedBook>,
+                emptyBooks as IReadOnlyList<BookBorrowWIthDetailInfo>,
                 _redisReaderBooksTtl),
             Times.Once);
     }
@@ -714,14 +714,14 @@ public class ReaderServiceTests
         var cacheKey1 = "cache-key-1";
         var cacheKey2 = "cache-key-2";
         var borrowedBooks1 = _fixture
-            .Build<BorrowedBook>()
+            .Build<BookBorrowWIthDetailInfo>()
             .Without(b => b.BorrowDate)
             .Without(b => b.DueDate)
             .Without(b => b.ReturnDate)
             .CreateMany(2)
             .ToList();
         var borrowedBooks2 = _fixture
-            .Build<BorrowedBook>()
+            .Build<BookBorrowWIthDetailInfo>()
             .Without(b => b.BorrowDate)
             .Without(b => b.DueDate)
             .Without(b => b.ReturnDate)
@@ -738,8 +738,8 @@ public class ReaderServiceTests
             .Returns(cacheKey1);
         
         _cacheServiceMock
-            .Setup(x => x.GetAsync<IReadOnlyList<BorrowedBook>>(cacheKey1))
-            .ReturnsAsync((IReadOnlyList<BorrowedBook>)null!);
+            .Setup(x => x.GetAsync<IReadOnlyList<BookBorrowWIthDetailInfo>>(cacheKey1))
+            .ReturnsAsync((IReadOnlyList<BookBorrowWIthDetailInfo>)null!);
         
         _readerRepositoryMock
             .Setup(x => x.GetReadersBorrowBooks(readerId1, It.IsAny<CancellationToken>()))
@@ -755,8 +755,8 @@ public class ReaderServiceTests
             .Returns(cacheKey2);
         
         _cacheServiceMock
-            .Setup(x => x.GetAsync<IReadOnlyList<BorrowedBook>>(cacheKey2))
-            .ReturnsAsync((IReadOnlyList<BorrowedBook>)null!);
+            .Setup(x => x.GetAsync<IReadOnlyList<BookBorrowWIthDetailInfo>>(cacheKey2))
+            .ReturnsAsync((IReadOnlyList<BookBorrowWIthDetailInfo>)null!);
         
         _readerRepositoryMock
             .Setup(x => x.GetReadersBorrowBooks(readerId2, It.IsAny<CancellationToken>()))

@@ -39,5 +39,5 @@ public interface IReaderService
     /// <param name="readerId">идентификатор карточки</param>
     /// <param name="cancellationToken">токен отмены</param>
     /// <returns>список записей о выдачах</returns>
-    Task<IReadOnlyList<BorrowedBook>> GetAllBorrowBooks(Guid readerId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<BookBorrowWIthDetailInfo>> GetAllBorrowBooks(Guid readerId, CancellationToken cancellationToken);
 }

@@ -26,11 +26,11 @@ public class BookBorrow
     ///  Создает новый объект выдачи книги
     /// </summary>
     /// <returns>объект выдачи книги</returns>
-    public static BookBorrow CreateBookBorrow()
+    public static BookBorrow CreateBookBorrow(TimeProvider timeProvider)
     {
         var bookBorrow = new BookBorrow
         {
-            BorrowDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            BorrowDate = DateOnly.FromDateTime(timeProvider.GetUtcNow().DateTime),
             Status = BookIssueStatus.Issued
         };
         bookBorrow.DueDate = bookBorrow.BorrowDate.AddDays(30);
@@ -39,9 +39,9 @@ public class BookBorrow
     /// <summary>
     /// Возвращает книгу в библиотеку
     /// </summary>
-    public void ReturnBookBorrow()
+    public void ReturnBookBorrow(TimeProvider timeProvider)
     {
-        var currentDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        var currentDate = DateOnly.FromDateTime(timeProvider.GetUtcNow().DateTime);
         Status = currentDate <= DueDate ? BookIssueStatus.Returned : BookIssueStatus.Overdue;
         ReturnDate = currentDate;
         Book.Status = BookStatus.Available;

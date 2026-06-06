@@ -22,6 +22,7 @@ public class LibraryService: ILibraryService
     private readonly ICursorPaginationService<Book> _bookPaginationService;
     private readonly ICacheService _cacheService;
     private readonly IRabbitMqPublisher _publisher;
+    private readonly TimeProvider _timeProvider;
     private readonly string _booksCacheVersionKey;
     private readonly string _libraryBooksCachePrefix;
     private readonly double _libraryBooksCacheTtlInMinutes;
@@ -42,7 +43,8 @@ public class LibraryService: ILibraryService
         ICacheService cacheService,
         IOptionsMonitor<MinioOptions> minioOptions,
         IOptionsMonitor<RabbitOptions> rabbitOptions,
-        IOptionsMonitor<RedisOptions> redisOptions)
+        IOptionsMonitor<RedisOptions> redisOptions, 
+        TimeProvider timeProvider)
     {
         _readerRepository = readerRepository;
         _bookRepository = bookRepository;
@@ -50,6 +52,7 @@ public class LibraryService: ILibraryService
         _fileStorageService = fileStorageService;
         _bookPaginationService = bookPaginationService;
         _cacheService = cacheService;
+        _timeProvider = timeProvider;
         _publisher = publisher;
         var minioOpt = minioOptions.CurrentValue;
         var redisOpt = redisOptions.CurrentValue;
@@ -80,7 +83,7 @@ public class LibraryService: ILibraryService
         {
             throw new LibraryServiceException("Нельзя выдать книгу с неактивной карточкой");
         }
-        var bookBorrow = BookBorrow.CreateBookBorrow();
+        var bookBorrow = BookBorrow.CreateBookBorrow(_timeProvider);
         book.Status = BookStatus.Borrow;
         await _borrowRepository.CreateBookBorrow(bookId, readerId, bookBorrow, cancellationToken);
         await _bookRepository.UpdateBook(bookId, book, cancellationToken);
@@ -97,9 +100,18 @@ public class LibraryService: ILibraryService
     public async Task ReturnBook(Guid bookId, Guid readerId, CancellationToken cancellationToken)
     {
         var (id, bookBorrow) = await _borrowRepository.GetBookBorrow(bookId, readerId, cancellationToken);
-        var reader = await _readerRepository.GetReader(readerId, cancellationToken);
-        bookBorrow.ReturnBookBorrow();
+        if (bookBorrow.Status != BookIssueStatus.Issued)
+        {
+            throw new LibraryServiceException("Нельзя вернуть уже возвращенную книгу");
+        }
+
+        if (bookBorrow.Book.Status != BookStatus.Borrow)
+        {
+            throw new LibraryServiceException("Книга не выдана читателю");
+        }
+        bookBorrow.ReturnBookBorrow(_timeProvider);
         await _borrowRepository.ReturnBookBorrow(id, bookBorrow, cancellationToken);
+        var reader = await _readerRepository.GetReader(readerId, cancellationToken);
         var message = new BookReturnedEvent(bookId, readerId, bookBorrow.Book.Title, 
             reader.FullName, bookBorrow.ReturnDate);
         await _publisher.PublishAsync(
@@ -112,14 +124,18 @@ public class LibraryService: ILibraryService
 
     public async Task<BookDetailsDto> GetBookDetails(Guid bookId, CancellationToken cancellationToken)
     {
-        var book = await _bookRepository.GetBookById(bookId, cancellationToken);
-        return await GetBookDetails(bookId, book, cancellationToken);
-    }
+        async Task<(Guid bookId, Book)> GetBook() => 
+            (bookId, await _bookRepository.GetBookById(bookId, cancellationToken));
 
+        return await GetBookDetails((Func<Task<(Guid bookId, Book)>>)GetBook, cancellationToken);
+    }
+    
     public async Task<BookDetailsDto> GetBookDetails(string title, CancellationToken cancellationToken)
     {
-        var (id,book) = await _bookRepository.GetBookByTitle(title, cancellationToken);
-        return await GetBookDetails(id, book, cancellationToken);
+        Task<(Guid id, Book book)> GetBook() => 
+            _bookRepository.GetBookByTitle(title, cancellationToken);
+        
+        return await GetBookDetails(GetBook, cancellationToken);
     }
 
     public async Task<CursorPaginationResponse<Book>> GetNonArchivedBooksPage(
@@ -145,7 +161,7 @@ public class LibraryService: ILibraryService
         return cursorResponse;
     }
 
-    private async Task<BookDetailsDto> GetBookDetails(Guid id, Book book, CancellationToken cancellationToken)
+    private async Task<BookDetailsDto> GetBookDetails(Func<Task<(Guid id, Book book)>> getBook, CancellationToken cancellationToken)
     {
         var cacheVersion = await _cacheService.GetCurrentCacheVersion(_booksCacheVersionKey);
         var cacheKey = _cacheService.GenerateCacheKey(_booksDetailsCachePrefix, cacheVersion, null);
@@ -154,15 +170,18 @@ public class LibraryService: ILibraryService
         {
             return cachedResult;
         }
-        if (book.CoverImagePath is not null)
-        {
-            book.CoverImagePath = await _fileStorageService.GetFileLinkAsync(_coversBucketName,book.CoverImagePath, cancellationToken);
-        }
+
+        var (id, book) = await getBook();
         var dto = new BookDetailsDto
         {
             Id = id,
             Book = book
         };
+        
+        if (book.CoverImagePath is null) return dto;
+        
+        book.CoverImagePath = await _fileStorageService.GetFileLinkAsync(_coversBucketName,
+            book.CoverImagePath, cancellationToken);
         await _cacheService.SetAsync(
             cacheKey,
             dto,

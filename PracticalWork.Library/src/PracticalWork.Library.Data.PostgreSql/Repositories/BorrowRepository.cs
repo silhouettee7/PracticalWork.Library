@@ -38,7 +38,7 @@ public class BorrowRepository: IBorrowRepository
     {
         var entity = await _appDbContext.BookBorrows
             .Include(b => b.Book)
-            .Where(b => b.Status == BookIssueStatus.Issued)
+            .Where(b => b.Status == BookIssueStatus.Issued && b.Book.Status == BookStatus.Borrow)
             .SingleOrDefaultAsync(b => b.BookId == bookId && b.ReaderId == readerId, cancellationToken: cancellationToken)
             ?? throw new EntityNotFoundException($"Выдача книги:{bookId} у читателя:{readerId} не обнаружена");
         return (entity.Id, entity.ToBookBorrow());

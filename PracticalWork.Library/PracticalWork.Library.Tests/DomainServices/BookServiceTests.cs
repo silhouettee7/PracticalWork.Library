@@ -13,7 +13,7 @@ using PracticalWork.Library.Enums;
 using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Models;
 
-namespace PracticalWork.Library.Tests.Services;
+namespace PracticalWork.Library.Tests.DomainServices;
 
 public class BookServiceTests
 {

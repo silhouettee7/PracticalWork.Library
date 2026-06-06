@@ -46,7 +46,7 @@ public interface IReaderRepository
     /// <param name="id">идентификатор карточки</param>
     /// <param name="cancellationToken">токен отмены</param>
     /// <returns>флаг активности карточки и список выданных книг</returns>
-    Task<(bool isActive, IReadOnlyList<BorrowedBook> books)> GetReadersBorrowBooks(Guid id,
+    Task<(bool isActive, IReadOnlyList<BookBorrowWIthDetailInfo> books)> GetReadersBorrowBooks(Guid id,
         CancellationToken cancellationToken);
 
     /// <summary>
