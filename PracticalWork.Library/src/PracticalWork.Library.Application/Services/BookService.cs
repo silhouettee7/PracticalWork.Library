@@ -81,7 +81,7 @@ public sealed class BookService : IBookService
     public async Task UpdateBook(Guid id, Book updatedBook)
     {
         var book = await _bookRepository.GetBookById(id);
-        if (book.IsArchived)
+        if (book.IsArchived || book.Status == BookStatus.Archived)
         {
             throw new BookServiceException("Книга в архиве");
         }
@@ -97,6 +97,7 @@ public sealed class BookService : IBookService
         var book = await _bookRepository.GetBookById(id, cancellationToken);
         book.Archive();
         await _bookRepository.UpdateBook(id, book, cancellationToken);
+        await _cacheService.InvalidateCache(_booksCacheVersionKey);
         var response = new BookArchive
         {
             Id = id,
@@ -109,7 +110,7 @@ public sealed class BookService : IBookService
             _libraryExchangeName, 
            _bookArchiveRoutingKey, 
             message, cancellationToken);
-        await _cacheService.InvalidateCache(_booksCacheVersionKey);
+        
         return response;
     }
 

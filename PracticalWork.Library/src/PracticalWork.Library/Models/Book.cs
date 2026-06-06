@@ -1,5 +1,6 @@
 ﻿using Domain.Models;
 using PracticalWork.Library.Enums;
+using PracticalWork.Library.Exceptions;
 
 namespace PracticalWork.Library.Models;
 
@@ -50,8 +51,11 @@ public sealed class Book: ICursor
     public void Archive()
     {
         if (!CanBeArchived())
-            throw new InvalidOperationException("Книга не может быть заархивирована.");
-
+            throw new BookServiceException("Книга не может быть заархивирована. Она выдана читателю");
+        if (Status == BookStatus.Archived || IsArchived)
+        {
+            throw new BookServiceException("Попытка повторной архивации книги");
+        }
         IsArchived = true;
         Status = BookStatus.Archived;
     }

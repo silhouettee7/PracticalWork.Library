@@ -94,10 +94,15 @@ public class AdministrationReportService: IAdministrationReportService
         
         var borrowedStatistic = await _borrowRepository
             .GetBorrowBookStatistic(startDate, endDate, cancellationToken);
+
+        if (borrowedStatistic is null)
+        {
+            _logger.LogInformation("Нет статистики за указанный период: {startDate} - {endDate}", startDate, endDate);
+        }
         
-        reportAdm.BorrowedCount = borrowedStatistic.BorrowedCount;
-        reportAdm.ReturnedCount = borrowedStatistic.ReturnedCount;
-        reportAdm.OverdueCount = borrowedStatistic.OverdueCount;
+        reportAdm.BorrowedCount = borrowedStatistic?.BorrowedCount ?? 0;
+        reportAdm.ReturnedCount = borrowedStatistic?.ReturnedCount ?? 0;
+        reportAdm.OverdueCount = borrowedStatistic?.OverdueCount ?? 0;
         reportAdm.PeriodFrom = startDate;
         reportAdm.PeriodTo = endDate.AddDays(-1);
 
