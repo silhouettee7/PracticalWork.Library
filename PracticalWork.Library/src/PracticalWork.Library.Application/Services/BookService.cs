@@ -56,18 +56,19 @@ public sealed class BookService : IBookService
         _coversBucketName = minioOpt.CoversBucketName;
     }
 
-    public async Task<Guid> CreateBook(Book book)
+    public async Task<Guid> CreateBook(Book book, CancellationToken cancellationToken)
     {
         book.Status = BookStatus.Available;
         try
         {
-            var bookId = await _bookRepository.CreateBook(book);
+            var bookId = await _bookRepository.CreateBook(book, cancellationToken);
             var message = new BookCreatedEvent(
                 bookId, book.Title,
                 book.Category.ToString(),
                 book.Authors.ToArray(),
                 book.Year);
-            await _publisher.PublishAsync(_libraryExchangeName,_bookCreateRoutingKey,message);
+            await _publisher.PublishAsync(_libraryExchangeName,_bookCreateRoutingKey,
+                message, cancellationToken);
             await _cacheService.InvalidateCache(_booksCacheVersionKey);
             return bookId;
             
@@ -78,9 +79,9 @@ public sealed class BookService : IBookService
         }
     }
 
-    public async Task UpdateBook(Guid id, Book updatedBook)
+    public async Task UpdateBook(Guid id, Book updatedBook, CancellationToken cancellationToken)
     {
-        var book = await _bookRepository.GetBookById(id);
+        var book = await _bookRepository.GetBookById(id, cancellationToken);
         if (book.IsArchived || book.Status == BookStatus.Archived)
         {
             throw new BookServiceException("Книга в архиве");
@@ -88,11 +89,11 @@ public sealed class BookService : IBookService
 
         book.Update(updatedBook.Title, updatedBook.Description,
             updatedBook.Year, updatedBook.Authors);
-        await _bookRepository.UpdateBook(id, book);
+        await _bookRepository.UpdateBook(id, book, cancellationToken);
         await _cacheService.InvalidateCache(_booksCacheVersionKey);
     }
 
-    public async Task<BookArchive> ArchiveBook(Guid id, CancellationToken cancellationToken = default)
+    public async Task<BookArchive> ArchiveBook(Guid id, CancellationToken cancellationToken)
     {
         var book = await _bookRepository.GetBookById(id, cancellationToken);
         book.Archive();
@@ -114,7 +115,8 @@ public sealed class BookService : IBookService
         return response;
     }
 
-    public async Task<CursorPaginationResponse<Book>> GetBooksPage(CursorPaginationRequest request, BookStatus? status, BookCategory? category, string author)
+    public async Task<CursorPaginationResponse<Book>> GetBooksPage(CursorPaginationRequest request, 
+        BookStatus? status, BookCategory? category, string author, CancellationToken cancellationToken)
     {
         var cacheVersion = await _cacheService.GetCurrentCacheVersion(_booksCacheVersionKey);
         var prms = new { category, author, status, request };
@@ -125,7 +127,8 @@ public sealed class BookService : IBookService
             return cachedResult;
         }
 
-        var page = await _bookRepository.GetBooksPageFilteringByFields(request, status, category, author);
+        var page = await _bookRepository.GetBooksPageFilteringByFields(
+            request, status, category, author, cancellationToken);
         var paginationResponse = _bookPaginationService.ToCursorPageResponse(page, request);
 
         await _cacheService.SetAsync(
@@ -136,15 +139,16 @@ public sealed class BookService : IBookService
         return paginationResponse;
     }
 
-    public async Task AddBookDetails(Guid bookId, string description, Stream coverImageStream, string contentType)
+    public async Task AddBookDetails(Guid bookId, string description, Stream coverImageStream, 
+        string contentType, CancellationToken cancellationToken)
     {
-        var book = await _bookRepository.GetBookById(bookId);
+        var book = await _bookRepository.GetBookById(bookId, cancellationToken);
         var currentDate = _timeProvider.GetUtcNow().UtcDateTime;
         var fileName = $"book-covers/{currentDate.Year}/{currentDate.Month}/{bookId}";
-        await _fileStorageService.UploadFileAsync(_coversBucketName,fileName, coverImageStream, contentType);
+        await _fileStorageService.UploadFileAsync(_coversBucketName,fileName, coverImageStream, contentType, cancellationToken);
         book.Description = description;
         book.CoverImagePath = fileName;
-        await _bookRepository.UpdateBook(bookId, book);
+        await _bookRepository.UpdateBook(bookId, book, cancellationToken);
         await _cacheService.InvalidateCache(_booksCacheVersionKey);
     }
 }

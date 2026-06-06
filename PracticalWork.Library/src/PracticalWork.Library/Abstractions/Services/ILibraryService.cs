@@ -14,31 +14,41 @@ public interface ILibraryService
     /// </summary>
     /// <param name="bookId">идентификатор книги</param>
     /// <param name="readerId">идентификатор карточки</param>
+    /// <param name="cancellationToken">токен отмены</param>
     /// <returns></returns>
-    Task BorrowBook(Guid bookId, Guid readerId);
+    Task BorrowBook(Guid bookId, Guid readerId, CancellationToken cancellationToken);
+
     /// <summary>
     /// Вернуть книгу
     /// </summary>
     /// <param name="bookId">идентификатор книги</param>
     /// <param name="readerId">идентификатор карточки</param>
+    /// <param name="cancellationToken">токен отмены</param>
     /// <returns></returns>
-    Task ReturnBook(Guid bookId, Guid readerId);
+    Task ReturnBook(Guid bookId, Guid readerId, CancellationToken cancellationToken);
+
     /// <summary>
     /// Получить детали книги по идентификатору
     /// </summary>
     /// <param name="bookId">идентификатор книги</param>
+    /// <param name="cancellationToken">токен отмены</param>
     /// <returns>идентификатор книги и объект книги</returns>
-    Task<BookDetailsDto> GetBookDetails(Guid bookId);
+    Task<BookDetailsDto> GetBookDetails(Guid bookId, CancellationToken cancellationToken);
+
     /// <summary>
     /// Получить детали книги по названию
     /// </summary>
     /// <param name="title">название книги</param>
+    /// <param name="cancellationToken">токен отмены</param>
     /// <returns>идентификатор книги и объект книги</returns>
-    Task<BookDetailsDto> GetBookDetails(string title);
+    Task<BookDetailsDto> GetBookDetails(string title, CancellationToken cancellationToken);
+
     /// <summary>
     /// Получить не архивные книги постранично
     /// </summary>
     /// <param name="request">запрос пагинации</param>
+    /// <param name="cancellationToken">токен отмены</param>
     /// <returns>ответ пагинации</returns>
-    Task<CursorPaginationResponse<Book>> GetNonArchivedBooksPage(CursorPaginationRequest request);
+    Task<CursorPaginationResponse<Book>> GetNonArchivedBooksPage(
+        CursorPaginationRequest request, CancellationToken cancellationToken);
 }

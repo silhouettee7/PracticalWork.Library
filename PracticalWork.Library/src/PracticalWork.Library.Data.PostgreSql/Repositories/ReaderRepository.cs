@@ -15,7 +15,7 @@ public class ReaderRepository: IReaderRepository
     {
         _appDbContext = context;
     }
-    public async Task<Guid> CreateReader(Reader reader)
+    public async Task<Guid> CreateReader(Reader reader, CancellationToken cancellationToken)
     {
         ReaderEntity readerEntity = new()
         {
@@ -27,20 +27,20 @@ public class ReaderRepository: IReaderRepository
             UpdatedAt = DateTime.UtcNow
         };
         _appDbContext.Readers.Add(readerEntity);
-        await _appDbContext.SaveChangesAsync();
+        await _appDbContext.SaveChangesAsync(cancellationToken);
         
         return readerEntity.Id;
     }
 
-    public async Task<bool> IsExistReader(string phone)
+    public async Task<bool> IsExistReader(string phone, CancellationToken cancellationToken)
     {
-        return await _appDbContext.Readers.AnyAsync(reader => reader.PhoneNumber == phone);
+        return await _appDbContext.Readers.AnyAsync(reader => reader.PhoneNumber == phone, cancellationToken: cancellationToken);
     }
 
-    public async Task<Reader> GetReader(Guid id)
+    public async Task<Reader> GetReader(Guid id, CancellationToken cancellationToken)
     {
         var reader = await _appDbContext.Readers
-            .SingleOrDefaultAsync(reader => reader.Id == id)
+            .SingleOrDefaultAsync(reader => reader.Id == id, cancellationToken: cancellationToken)
             ?? throw new EntityNotFoundException($"Карточка:{id} не найдена");
         return new Reader
         {
@@ -51,25 +51,25 @@ public class ReaderRepository: IReaderRepository
         };
     }
 
-    public async Task UpdateReader(Guid id, Reader reader)
+    public async Task UpdateReader(Guid id, Reader reader, CancellationToken cancellationToken)
     {
-        var readerEntity = await _appDbContext.Readers.SingleOrDefaultAsync(r => r.Id == id) 
+        var readerEntity = await _appDbContext.Readers.SingleOrDefaultAsync(r => r.Id == id, cancellationToken: cancellationToken) 
                            ?? throw new EntityNotFoundException($"Карточка:{id} не нашлась");
         readerEntity.FullName = reader.FullName;
         readerEntity.PhoneNumber = reader.PhoneNumber;
         readerEntity.ExpiryDate = reader.ExpiryDate;
         readerEntity.IsActive = reader.IsActive;
         _appDbContext.Readers.Update(readerEntity);
-        await _appDbContext.SaveChangesAsync();
+        await _appDbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<Reader> GetReaderWithBorrowBooks(Guid id)
+    public async Task<Reader> GetReaderWithBorrowBooks(Guid id, CancellationToken cancellationToken)
     {
         var readerEntity = await _appDbContext.Readers
             .Include(r => r.BorrowedRecords
                 .Where(b => b.Status == BookIssueStatus.Issued))
             .ThenInclude(b => b.Book)
-            .SingleOrDefaultAsync(r => r.Id == id)
+            .SingleOrDefaultAsync(r => r.Id == id, cancellationToken: cancellationToken)
             ?? throw new EntityNotFoundException($"Карточка:{id} не нашлась");
         var reader = new Reader
         {
@@ -83,14 +83,15 @@ public class ReaderRepository: IReaderRepository
         return reader;
     }
 
-    public async Task<(bool isActive, IReadOnlyList<BorrowedBook> books)> GetReadersBorrowBooks(Guid id)
+    public async Task<(bool isActive, IReadOnlyList<BorrowedBook> books)> GetReadersBorrowBooks(Guid id,
+        CancellationToken cancellationToken)
     {
         var readerEntity = await _appDbContext.Readers
             .Include(r => r.BorrowedRecords
                 .Where(b => b.Status == BookIssueStatus.Issued))
             .ThenInclude(b => b.Book)
             .Select(r => new { r.Id, r.IsActive, r.BorrowedRecords })
-            .SingleOrDefaultAsync(r => r.Id == id)
+            .SingleOrDefaultAsync(r => r.Id == id, cancellationToken: cancellationToken)
             ?? throw new EntityNotFoundException($"Карточка:{id} не нашлась");
         
         return (readerEntity.IsActive,readerEntity.BorrowedRecords

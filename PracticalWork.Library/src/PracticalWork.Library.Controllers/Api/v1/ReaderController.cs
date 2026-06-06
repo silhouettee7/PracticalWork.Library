@@ -29,9 +29,10 @@ public class ReaderController: Controller
     [ProducesResponseType<CreateReaderResponse>( 200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(500)]
-    public async Task<IActionResult> CreateReader(CreateReaderRequest request)
+    public async Task<IActionResult> CreateReader(CreateReaderRequest request, 
+        CancellationToken cancellationToken)
     {
-        var result = await _readerService.CreateReader(request.ToReader());
+        var result = await _readerService.CreateReader(request.ToReader(),cancellationToken);
         return Ok(new CreateReaderResponse(result));
     }
     
@@ -45,9 +46,10 @@ public class ReaderController: Controller
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     [ProducesResponseType(500)]
-    public async Task<IActionResult> ExtendReader(Guid id, ExtendReaderExpiryDateRequest request)
+    public async Task<IActionResult> ExtendReader(Guid id, 
+        ExtendReaderExpiryDateRequest request, CancellationToken cancellationToken)
     {
-        await _readerService.ExtendExpiryDate(id, request.Date);
+        await _readerService.ExtendExpiryDate(id, request.Date, cancellationToken);
         return Ok();
     }
     
@@ -61,9 +63,10 @@ public class ReaderController: Controller
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     [ProducesResponseType(500)]
-    public async Task<IActionResult> CloseReader(Guid id)
+    public async Task<IActionResult> CloseReader(Guid id, CancellationToken cancellationToken)
     {
-        var (borrowBooksExist, borrowBooks) = await _readerService.CloseReader(id);
+        var (borrowBooksExist, borrowBooks) = 
+            await _readerService.CloseReader(id, cancellationToken);
         if (!borrowBooksExist)
         {
             return Ok();
@@ -83,9 +86,10 @@ public class ReaderController: Controller
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     [ProducesResponseType(500)]
-    public async Task<IActionResult> GetBorrowedBooks(Guid id)
+    public async Task<IActionResult> GetBorrowedBooks(Guid id, 
+        CancellationToken cancellationToken)
     {
-        var books = await _readerService.GetAllBorrowBooks(id);
+        var books = await _readerService.GetAllBorrowBooks(id, cancellationToken);
         return Ok(books);
     }
 }

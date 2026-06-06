@@ -12,14 +12,19 @@ public interface IBookService
     /// <summary>
     /// Создание книги
     /// </summary>
-    Task<Guid> CreateBook(Book book);
+    /// <param name="book">книга</param>
+    /// <param name="cancellationToken">токен отмены</param>
+    /// <returns></returns>
+    Task<Guid> CreateBook(Book book, CancellationToken cancellationToken);
+
     /// <summary>
     /// Обновление книги
     /// </summary>
     /// <param name="id">идентификатор книги</param>
     /// <param name="book">книга с обновленными параметрами</param>
+    /// <param name="cancellationToken">токен отмены</param>
     /// <returns></returns>
-    Task UpdateBook(Guid id, Book book);
+    Task UpdateBook(Guid id, Book book, CancellationToken cancellationToken);
 
     /// <summary>
     /// Архивирование книги
@@ -27,7 +32,8 @@ public interface IBookService
     /// <param name="id">идентификатор книги</param>
     /// <param name="cancellationToken">токен отмены</param>
     /// <returns></returns>
-    Task<BookArchive> ArchiveBook(Guid id, CancellationToken cancellationToken = default);
+    Task<BookArchive> ArchiveBook(Guid id, CancellationToken cancellationToken);
+
     /// <summary>
     /// Получить страницу с книгами
     /// </summary>
@@ -35,9 +41,11 @@ public interface IBookService
     /// <param name="status">фильтр на статус книги</param>
     /// <param name="category">фильтр на категорию книги</param>
     /// <param name="author">фильтр на автора книги</param>
+    /// <param name="cancellationToken">токен отмены</param>
     /// <returns>ответ пагинации</returns>
     Task<CursorPaginationResponse<Book>> GetBooksPage(CursorPaginationRequest request, 
-        BookStatus? status, BookCategory? category, string author);
+        BookStatus? status, BookCategory? category, string author, CancellationToken cancellationToken);
+
     /// <summary>
     /// Добавить деталей к книге
     /// </summary>
@@ -45,6 +53,8 @@ public interface IBookService
     /// <param name="description">описание книги</param>
     /// <param name="coverImageStream">поток изображения обложки книги</param>
     /// <param name="contentType">тип изображения</param>
+    /// <param name="cancellationToken">токен отмены</param>
     /// <returns></returns>
-    Task AddBookDetails(Guid bookId, string description, Stream coverImageStream, string contentType);
+    Task AddBookDetails(Guid bookId, string description, Stream coverImageStream, string contentType,
+        CancellationToken cancellationToken);
 }

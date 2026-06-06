@@ -20,7 +20,7 @@ public sealed class BookRepository : IBookRepository
         _appDbContext = appDbContext;
     }
 
-    public async Task<Guid> CreateBook(Book book)
+    public async Task<Guid> CreateBook(Book book, CancellationToken cancellationToken)
     {
         AbstractBookEntity entity = book.Category switch
         {
@@ -40,7 +40,7 @@ public sealed class BookRepository : IBookRepository
         entity.UpdatedAt = DateTime.UtcNow;
         
         _appDbContext.Add(entity);
-        await _appDbContext.SaveChangesAsync();
+        await _appDbContext.SaveChangesAsync(cancellationToken);
 
         return entity.Id;
     }
@@ -53,10 +53,10 @@ public sealed class BookRepository : IBookRepository
         return bookEntity.ToBook();
     }
 
-    public async Task<(Guid id, Book book)> GetBookByTitle(string title)
+    public async Task<(Guid id, Book book)> GetBookByTitle(string title, CancellationToken cancellationToken)
     {
         var bookEntity = await _appDbContext.Books
-            .FirstOrDefaultAsync(b => b.Title == title)
+            .FirstOrDefaultAsync(b => b.Title == title, cancellationToken: cancellationToken)
             ?? throw new EntityNotFoundException($"Книга с названием:{title} не найдена");
         return (bookEntity.Id,bookEntity.ToBook());
     }
@@ -79,8 +79,8 @@ public sealed class BookRepository : IBookRepository
         await _appDbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Book>> GetBooksPageFilteringByFields(
-        CursorPaginationRequest request, BookStatus? status, BookCategory? category, string author)
+    public async Task<IReadOnlyList<Book>> GetBooksPageFilteringByFields(CursorPaginationRequest request,
+        BookStatus? status, BookCategory? category, string author, CancellationToken cancellationToken)
     {
         IQueryable<AbstractBookEntity> query = category switch
         {
@@ -96,11 +96,11 @@ public sealed class BookRepository : IBookRepository
             .CursorPage(request)    
             .Select(e => e.ToBook());
         
-        return await entities.ToListAsync();
+        return await entities.ToListAsync(cancellationToken: cancellationToken);
     }
 
     public async Task<IReadOnlyList<Book>> GetNonArchivedBooksPageWithIssuanceRecords(
-        CursorPaginationRequest request)
+        CursorPaginationRequest request, CancellationToken cancellationToken)
     {
         var entities = _appDbContext.Books
             .Where(b => b.Status != BookStatus.Archived)
@@ -108,7 +108,7 @@ public sealed class BookRepository : IBookRepository
             .CursorPage(request)
             .Select(e => e.ToBook());
         
-        return await entities.ToListAsync();
+        return await entities.ToListAsync(cancellationToken: cancellationToken);
     }
 
     public async Task<List<AvailableOldBookDto>> GetAvailableOldBooksPage(

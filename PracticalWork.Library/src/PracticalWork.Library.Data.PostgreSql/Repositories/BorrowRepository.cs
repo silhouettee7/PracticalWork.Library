@@ -18,7 +18,8 @@ public class BorrowRepository: IBorrowRepository
         _appDbContext = appDbContext;
     }
 
-    public async Task CreateBookBorrow(Guid bookId, Guid readerId, BookBorrow bookBorrow)
+    public async Task CreateBookBorrow(Guid bookId, Guid readerId, BookBorrow bookBorrow,
+        CancellationToken cancellationToken)
     {
         BookBorrowEntity entity = new()
         {
@@ -29,30 +30,32 @@ public class BorrowRepository: IBorrowRepository
             Status = bookBorrow.Status,
         };
         _appDbContext.BookBorrows.Add(entity);
-        await _appDbContext.SaveChangesAsync();
+        await _appDbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<(Guid id, BookBorrow bookBorrow)> GetBookBorrow(Guid bookId, Guid readerId)
+    public async Task<(Guid id, BookBorrow bookBorrow)> GetBookBorrow(Guid bookId, Guid readerId,
+        CancellationToken cancellationToken)
     {
         var entity = await _appDbContext.BookBorrows
             .Include(b => b.Book)
             .Where(b => b.Status == BookIssueStatus.Issued)
-            .SingleOrDefaultAsync(b => b.BookId == bookId && b.ReaderId == readerId)
+            .SingleOrDefaultAsync(b => b.BookId == bookId && b.ReaderId == readerId, cancellationToken: cancellationToken)
             ?? throw new EntityNotFoundException($"Выдача книги:{bookId} у читателя:{readerId} не обнаружена");
         return (entity.Id, entity.ToBookBorrow());
     }
 
-    public async Task ReturnBookBorrow(Guid bookBorrowId, BookBorrow bookBorrow)
+    public async Task ReturnBookBorrow(Guid bookBorrowId, BookBorrow bookBorrow,
+        CancellationToken cancellationToken)
     {
         var entity = await _appDbContext.BookBorrows
             .Include(b => b.Book)
-            .SingleOrDefaultAsync(b => b.Id == bookBorrowId)
+            .SingleOrDefaultAsync(b => b.Id == bookBorrowId, cancellationToken: cancellationToken)
             ?? throw new EntityNotFoundException($"Выдача книги не обнаружена, id:{bookBorrowId}");
         entity.Status = bookBorrow.Status;
         entity.ReturnDate = bookBorrow.ReturnDate;
         entity.Book.Status = bookBorrow.Book.Status;
         _appDbContext.BookBorrows.Update(entity);
-        await _appDbContext.SaveChangesAsync();
+        await _appDbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<List<BorrowedIssuedBookInfoDto>> GetBorrowedIssuedBooksInfo(

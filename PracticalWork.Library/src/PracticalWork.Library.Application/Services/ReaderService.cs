@@ -43,26 +43,26 @@ public class ReaderService: IReaderService
         _readerCreateRoutingKey = rabbitOpt.Library.ReaderCreate.RoutingKey;
         _readerCloseRoutingKey = rabbitOpt.Library.ReaderClose.RoutingKey;
     }
-    public async Task<Guid> CreateReader(Reader reader)
+    public async Task<Guid> CreateReader(Reader reader, CancellationToken cancellationToken)
     {
-        if (await _readerRepository.IsExistReader(reader.PhoneNumber))
+        if (await _readerRepository.IsExistReader(reader.PhoneNumber, cancellationToken))
         {
             throw new ReaderServiceException("Phone number is not unique");
         }
         reader.IsActive = true;
-        var id = await _readerRepository.CreateReader(reader);
+        var id = await _readerRepository.CreateReader(reader, cancellationToken);
         var message = new ReaderCreatedEvent(id, reader.FullName,
             reader.PhoneNumber, reader.ExpiryDate, _timeProvider.GetUtcNow().UtcDateTime);
         await _publisher.PublishAsync(
             _libraryExchangeName, 
             _readerCreateRoutingKey, 
-            message);
+            message, cancellationToken);
         return id;
     }
 
-    public async Task ExtendExpiryDate(Guid id, DateOnly date)
+    public async Task ExtendExpiryDate(Guid id, DateOnly date, CancellationToken cancellationToken)
     {
-        var reader = await _readerRepository.GetReader(id);
+        var reader = await _readerRepository.GetReader(id, cancellationToken);
         if (!reader.IsActive)
         {
             throw new ReaderServiceException("Карточка неактивна");
@@ -73,12 +73,13 @@ public class ReaderService: IReaderService
             throw new ReaderServiceException("Необходимо продлить карточку на будущую дату");
         }
         reader.ExpiryDate = date;
-        await _readerRepository.UpdateReader(id, reader);
+        await _readerRepository.UpdateReader(id, reader, cancellationToken);
     }
 
-    public async Task<(bool borrowBooksExist, IReadOnlyList<Book> borrowBooks)> CloseReader(Guid id)
+    public async Task<(bool borrowBooksExist, IReadOnlyList<Book> borrowBooks)> CloseReader(
+        Guid id, CancellationToken cancellationToken)
     {
-        var readerWithBorrowBooks = await _readerRepository.GetReaderWithBorrowBooks(id);
+        var readerWithBorrowBooks = await _readerRepository.GetReaderWithBorrowBooks(id, cancellationToken);
         var borrowBooksExist = readerWithBorrowBooks.BorrowBooks.Any();
         if (borrowBooksExist)
         {
@@ -86,17 +87,18 @@ public class ReaderService: IReaderService
         }
         readerWithBorrowBooks.IsActive = false;
         readerWithBorrowBooks.ExpiryDate = DateOnly.FromDateTime(_timeProvider.GetUtcNow().UtcDateTime);
-        await _readerRepository.UpdateReader(id, readerWithBorrowBooks);
+        await _readerRepository.UpdateReader(id, readerWithBorrowBooks, cancellationToken);
         var message = new ReaderClosedEvent(id, readerWithBorrowBooks.FullName,
             _timeProvider.GetUtcNow().UtcDateTime, "Вызван метод закрытия карточки");
         await _publisher.PublishAsync(
             _libraryExchangeName, 
             _readerCloseRoutingKey, 
-            message);
+            message, cancellationToken);
         return (false, readerWithBorrowBooks.BorrowBooks);
     }
 
-    public async Task<IReadOnlyList<BorrowedBook>> GetAllBorrowBooks(Guid readerId)
+    public async Task<IReadOnlyList<BorrowedBook>> GetAllBorrowBooks(
+        Guid readerId, CancellationToken cancellationToken)
     {
         var cacheVersion = await _cacheService.GetCurrentCacheVersion(_readersCacheVersionKey);
         var cacheKey = _cacheService.GenerateCacheKey(_readerBooksCachePrefix, cacheVersion, null);
@@ -106,7 +108,7 @@ public class ReaderService: IReaderService
             return cachedResult;
         }
         var result = await _readerRepository
-            .GetReadersBorrowBooks(readerId);
+            .GetReadersBorrowBooks(readerId, cancellationToken);
         if (!result.isActive)
         {
             throw new ReaderServiceException("Карточка неактивна");

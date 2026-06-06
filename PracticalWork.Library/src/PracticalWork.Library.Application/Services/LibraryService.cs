@@ -67,10 +67,10 @@ public class LibraryService: ILibraryService
         _coversBucketName = minioOpt.CoversBucketName;
     }
     
-    public async Task BorrowBook(Guid bookId, Guid readerId)
+    public async Task BorrowBook(Guid bookId, Guid readerId, CancellationToken cancellationToken)
     {
-        var book = await _bookRepository.GetBookById(bookId);
-        var reader = await _readerRepository.GetReader(readerId);
+        var book = await _bookRepository.GetBookById(bookId, cancellationToken);
+        var reader = await _readerRepository.GetReader(readerId, cancellationToken);
         if (book.Status is BookStatus.Borrow or BookStatus.Archived)
         {
             throw new LibraryServiceException("Нельзя выдать архивную или выданную книгу");
@@ -82,47 +82,48 @@ public class LibraryService: ILibraryService
         }
         var bookBorrow = BookBorrow.CreateBookBorrow();
         book.Status = BookStatus.Borrow;
-        await _borrowRepository.CreateBookBorrow(bookId, readerId, bookBorrow);
-        await _bookRepository.UpdateBook(bookId, book);
+        await _borrowRepository.CreateBookBorrow(bookId, readerId, bookBorrow, cancellationToken);
+        await _bookRepository.UpdateBook(bookId, book, cancellationToken);
         var message = new BookBorrowedEvent(bookId, readerId, book.Title, 
             reader.FullName, bookBorrow.BorrowDate, bookBorrow.DueDate );
         await _publisher.PublishAsync(
             _libraryExchangeName,
             _bookBorrowRoutingKey,
-            message);
+            message, cancellationToken);
         await _cacheService.InvalidateCache(_booksCacheVersionKey);
         await _cacheService.InvalidateCache(_readersCacheVersionKey);
     }
 
-    public async Task ReturnBook(Guid bookId, Guid readerId)
+    public async Task ReturnBook(Guid bookId, Guid readerId, CancellationToken cancellationToken)
     {
-        var (id, bookBorrow) = await _borrowRepository.GetBookBorrow(bookId, readerId);
-        var reader = await _readerRepository.GetReader(readerId);
+        var (id, bookBorrow) = await _borrowRepository.GetBookBorrow(bookId, readerId, cancellationToken);
+        var reader = await _readerRepository.GetReader(readerId, cancellationToken);
         bookBorrow.ReturnBookBorrow();
-        await _borrowRepository.ReturnBookBorrow(id, bookBorrow);
+        await _borrowRepository.ReturnBookBorrow(id, bookBorrow, cancellationToken);
         var message = new BookReturnedEvent(bookId, readerId, bookBorrow.Book.Title, 
             reader.FullName, bookBorrow.ReturnDate);
         await _publisher.PublishAsync(
             _libraryExchangeName, 
             _bookReturnRoutingKey, 
-            message);
+            message, cancellationToken);
         await _cacheService.InvalidateCache(_booksCacheVersionKey);
         await _cacheService.InvalidateCache(_readersCacheVersionKey);
     }
 
-    public async Task<BookDetailsDto> GetBookDetails(Guid bookId)
+    public async Task<BookDetailsDto> GetBookDetails(Guid bookId, CancellationToken cancellationToken)
     {
-        var book = await _bookRepository.GetBookById(bookId);
-        return await GetBookDetails(bookId, book);
+        var book = await _bookRepository.GetBookById(bookId, cancellationToken);
+        return await GetBookDetails(bookId, book, cancellationToken);
     }
 
-    public async Task<BookDetailsDto> GetBookDetails(string title)
+    public async Task<BookDetailsDto> GetBookDetails(string title, CancellationToken cancellationToken)
     {
-        var (id,book) = await _bookRepository.GetBookByTitle(title);
-        return await GetBookDetails(id, book);
+        var (id,book) = await _bookRepository.GetBookByTitle(title, cancellationToken);
+        return await GetBookDetails(id, book, cancellationToken);
     }
 
-    public async Task<CursorPaginationResponse<Book>> GetNonArchivedBooksPage(CursorPaginationRequest request)
+    public async Task<CursorPaginationResponse<Book>> GetNonArchivedBooksPage(
+        CursorPaginationRequest request, CancellationToken cancellationToken)
     {
         var cacheVersion = await _cacheService.GetCurrentCacheVersion(_booksCacheVersionKey);
         var cacheKey = _cacheService.GenerateCacheKey(_libraryBooksCachePrefix, cacheVersion, request);
@@ -133,7 +134,7 @@ public class LibraryService: ILibraryService
         }
             
         var books = await _bookRepository
-            .GetNonArchivedBooksPageWithIssuanceRecords(request);
+            .GetNonArchivedBooksPageWithIssuanceRecords(request, cancellationToken);
             
         var cursorResponse = _bookPaginationService.ToCursorPageResponse(books,request);
         await _cacheService.SetAsync(
@@ -144,7 +145,7 @@ public class LibraryService: ILibraryService
         return cursorResponse;
     }
 
-    private async Task<BookDetailsDto> GetBookDetails(Guid id, Book book)
+    private async Task<BookDetailsDto> GetBookDetails(Guid id, Book book, CancellationToken cancellationToken)
     {
         var cacheVersion = await _cacheService.GetCurrentCacheVersion(_booksCacheVersionKey);
         var cacheKey = _cacheService.GenerateCacheKey(_booksDetailsCachePrefix, cacheVersion, null);
@@ -155,7 +156,7 @@ public class LibraryService: ILibraryService
         }
         if (book.CoverImagePath is not null)
         {
-            book.CoverImagePath = await _fileStorageService.GetFileLinkAsync(_coversBucketName,book.CoverImagePath);
+            book.CoverImagePath = await _fileStorageService.GetFileLinkAsync(_coversBucketName,book.CoverImagePath, cancellationToken);
         }
         var dto = new BookDetailsDto
         {

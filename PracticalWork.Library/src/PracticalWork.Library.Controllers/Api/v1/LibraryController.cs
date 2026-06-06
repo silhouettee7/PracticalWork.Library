@@ -32,9 +32,10 @@ public class LibraryController: Controller
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     [ProducesResponseType(500)]
-    public async Task<IActionResult> BorrowBook(Guid bookId, Guid readerId)
+    public async Task<IActionResult> BorrowBook(Guid bookId, Guid readerId,
+        CancellationToken cancellationToken)
     {
-        await _libraryService.BorrowBook(bookId, readerId);
+        await _libraryService.BorrowBook(bookId, readerId, cancellationToken);
         return Created();
     }
     
@@ -48,9 +49,10 @@ public class LibraryController: Controller
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     [ProducesResponseType(500)]
-    public async Task<IActionResult> ReturnBook(Guid bookId, Guid readerId)
+    public async Task<IActionResult> ReturnBook(Guid bookId, Guid readerId,
+        CancellationToken cancellationToken)
     {
-        await _libraryService.ReturnBook(bookId, readerId);
+        await _libraryService.ReturnBook(bookId, readerId, cancellationToken);
         return Ok();
     }
     
@@ -64,16 +66,17 @@ public class LibraryController: Controller
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     [ProducesResponseType(500)]
-    public async Task<IActionResult> GetBookDetails(string idOrTitle)
+    public async Task<IActionResult> GetBookDetails(string idOrTitle, 
+        CancellationToken cancellationToken)
     {
         BookDetailsDto result;
         if (Guid.TryParse(idOrTitle, out var bookId))
         {
-            result = await _libraryService.GetBookDetails(bookId);
+            result = await _libraryService.GetBookDetails(bookId, cancellationToken);
         }
         else
         {
-            result = await _libraryService.GetBookDetails(idOrTitle);
+            result = await _libraryService.GetBookDetails(idOrTitle, cancellationToken);
         }
         return Ok(result.Book.ToBookDetailsResponse(result.Id));
     }
@@ -87,10 +90,11 @@ public class LibraryController: Controller
     [ProducesResponseType<BookWithIssuanceCursorPaginationResponse>(200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(500)]
-    public async Task<IActionResult> GetBooksPage(CursorPaginationRequest request)
+    public async Task<IActionResult> GetBooksPage(CursorPaginationRequest request,
+        CancellationToken cancellationToken)
     {
         var result = await _libraryService
-            .GetNonArchivedBooksPage(request);
+            .GetNonArchivedBooksPage(request, cancellationToken);
         return Ok(result.ToBookWithIssuanceCursorPaginationResponse());
     }
 }

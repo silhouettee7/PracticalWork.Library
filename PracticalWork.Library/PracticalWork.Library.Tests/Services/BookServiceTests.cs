@@ -134,11 +134,11 @@ public class BookServiceTests
         var expectedId = _fixture.Create<Guid>();
         
         _bookRepositoryMock
-            .Setup(x => x.CreateBook(It.IsAny<Book>()))
+            .Setup(x => x.CreateBook(It.IsAny<Book>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedId);
         
         // Act
-        var result = await _bookService.CreateBook(book);
+        var result = await _bookService.CreateBook(book, It.IsAny<CancellationToken>());
         
         // Assert
         Assert.Equal(expectedId, result);
@@ -172,7 +172,7 @@ public class BookServiceTests
             .Create();
         
         // Act
-        await _bookService.CreateBook(book);
+        await _bookService.CreateBook(book, It.IsAny<CancellationToken>());
         
         //Assert
         Assert.Equal(BookStatus.Available, book.Status);
@@ -192,12 +192,12 @@ public class BookServiceTests
             .Create();
         
         _bookRepositoryMock
-            .Setup(x => x.CreateBook(It.IsAny<Book>()))
+            .Setup(x => x.CreateBook(It.IsAny<Book>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("Database error"));
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<BookServiceException>(
-            () => _bookService.CreateBook(book));
+            () => _bookService.CreateBook(book, It.IsAny<CancellationToken>()));
         
         Assert.Equal("Ошибка создание книги!", exception.Message);
         _cacheServiceMock.Verify(x => x.InvalidateCache(It.IsAny<string>()), Times.Never);
@@ -244,7 +244,7 @@ public class BookServiceTests
             .ReturnsAsync(existingBook);
         
         // Act
-        await _bookService.UpdateBook(bookId, updatedBook);
+        await _bookService.UpdateBook(bookId, updatedBook, It.IsAny<CancellationToken>());
         
         // Assert
         Assert.Equal(updatedBook.Title, existingBook.Title);
@@ -274,7 +274,7 @@ public class BookServiceTests
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<EntityNotFoundException>(
-            () => _bookService.UpdateBook(bookId, updatedBook));
+            () => _bookService.UpdateBook(bookId, updatedBook, It.IsAny<CancellationToken>()));
         
         Assert.Equal("Book not found", exception.Message);
         _bookRepositoryMock.Verify(x => x.UpdateBook(It.IsAny<Guid>(), 
@@ -306,7 +306,7 @@ public class BookServiceTests
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<BookServiceException>(
-            () => _bookService.UpdateBook(bookId, updatedBook));
+            () => _bookService.UpdateBook(bookId, updatedBook, It.IsAny<CancellationToken>()));
         
         Assert.Equal("Книга в архиве", exception.Message);
         _bookRepositoryMock.Verify(x => x.UpdateBook(It.IsAny<Guid>(), 
@@ -336,7 +336,7 @@ public class BookServiceTests
             .ReturnsAsync(book);
         
         // Act
-        var result = await _bookService.ArchiveBook(bookId);
+        var result = await _bookService.ArchiveBook(bookId, It.IsAny<CancellationToken>());
         
         // Assert
         Assert.True(book.IsArchived);
@@ -380,7 +380,7 @@ public class BookServiceTests
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<BookServiceException>(() =>
-            _bookService.ArchiveBook(bookId));
+            _bookService.ArchiveBook(bookId, It.IsAny<CancellationToken>()));
         
         Assert.Equal("Попытка повторной архивации книги", exception.Message);
         
@@ -413,7 +413,7 @@ public class BookServiceTests
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<BookServiceException>(() =>
-            _bookService.ArchiveBook(bookId));
+            _bookService.ArchiveBook(bookId, It.IsAny<CancellationToken>()));
         
         Assert.False(book.IsArchived);
         Assert.NotEqual(BookStatus.Archived, book.Status);
@@ -442,7 +442,7 @@ public class BookServiceTests
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<EntityNotFoundException>(
-            () => _bookService.ArchiveBook(bookId));
+            () => _bookService.ArchiveBook(bookId, It.IsAny<CancellationToken>()));
         Assert.Equal("Книга не найдена", exception.Message);
         
         _bookRepositoryMock.Verify(x => x.UpdateBook(It.IsAny<Guid>(), It.IsAny<Book>(),
@@ -485,7 +485,8 @@ public class BookServiceTests
             It.IsAny<CursorPaginationRequest>(), 
             It.IsAny<BookStatus?>(),
             It.IsAny<BookCategory>(),
-            It.IsAny<string>());
+            It.IsAny<string>(),
+            It.IsAny<CancellationToken>());
         
         // Assert
         Assert.Same(cachedResponse, result);
@@ -495,7 +496,8 @@ public class BookServiceTests
                 It.IsAny<CursorPaginationRequest>(), 
                 It.IsAny<BookStatus?>(), 
                 It.IsAny<BookCategory?>(), 
-                It.IsAny<string>()), Times.Never);
+                It.IsAny<string>(), 
+                It.IsAny<CancellationToken>()), Times.Never);
         _cacheServiceMock.Verify(
             x => x.SetAsync(
                 It.IsAny<string>(),
@@ -543,7 +545,8 @@ public class BookServiceTests
             .ReturnsAsync((CursorPaginationResponse<Book>)null!);
 
         _bookRepositoryMock
-            .Setup(x => x.GetBooksPageFilteringByFields(request, status, category, author))
+            .Setup(x => x.GetBooksPageFilteringByFields(
+                request, status, category, author, It.IsAny<CancellationToken>()))
             .ReturnsAsync(dbBooks);
         
         _paginationServiceMock
@@ -551,7 +554,8 @@ public class BookServiceTests
             .Returns(expectedResponse);
         
         // Act
-        var result = await _bookService.GetBooksPage(request, status, category, author);
+        var result = await _bookService.GetBooksPage(
+            request, status, category, author, It.IsAny<CancellationToken>());
         
         // Assert
         Assert.Same(expectedResponse, result);
@@ -589,7 +593,8 @@ public class BookServiceTests
             .ReturnsAsync(book);
         
         // Act
-        await _bookService.AddBookDetails(bookId, description, coverStream, contentType);
+        await _bookService.AddBookDetails(bookId, description, 
+            coverStream, contentType, It.IsAny<CancellationToken>());
         
         // Assert
         Assert.Equal(description, book.Description);
@@ -624,8 +629,8 @@ public class BookServiceTests
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<EntityNotFoundException>(
-            () => _bookService.AddBookDetails(bookId, It.IsAny<string>(), 
-                It.IsAny<Stream>(), It.IsAny<string>()));
+            () => _bookService.AddBookDetails(bookId, It.IsAny<string>(), It.IsAny<Stream>(), 
+                It.IsAny<string>(), It.IsAny<CancellationToken>()));
         Assert.Equal("Книга не найдена", exception.Message);
         
         _bookRepositoryMock.Verify(x => x.UpdateBook(bookId, It.IsAny<Book>(), 
@@ -655,8 +660,8 @@ public class BookServiceTests
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(
-            () => _bookService.AddBookDetails(bookId, It.IsAny<string>(), 
-                It.IsAny<Stream>(), It.IsAny<string>()));
+            () => _bookService.AddBookDetails(bookId, It.IsAny<string>(), It.IsAny<Stream>(), 
+                It.IsAny<string>(), It.IsAny<CancellationToken>()));
         
         Assert.Equal("Upload failed", exception.Message);
         Assert.Null(book.CoverImagePath);

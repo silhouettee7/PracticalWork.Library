@@ -11,39 +11,51 @@ public interface IReaderRepository
     /// Создать карточку
     /// </summary>
     /// <param name="reader">объект карточки</param>
+    /// <param name="cancellationToken">токен отмены</param>
     /// <returns>идентификатор карточки</returns>
-    Task<Guid> CreateReader(Reader reader);
+    Task<Guid> CreateReader(Reader reader, CancellationToken cancellationToken);
+
     /// <summary>
     /// Получить карточку читателя
     /// </summary>
     /// <param name="id">идентификатор карточки</param>
+    /// <param name="cancellationToken">токен отмены</param>
     /// <returns>объект карточки</returns>
-    Task<Reader> GetReader(Guid id);
+    Task<Reader> GetReader(Guid id, CancellationToken cancellationToken);
+
     /// <summary>
     /// Обновить карточку читателя
     /// </summary>
     /// <param name="id">идентификатор карточки</param>
     /// <param name="reader">объект карточки</param>
+    /// <param name="cancellationToken">токен отмены</param>
     /// <returns></returns>
-    Task UpdateReader(Guid id, Reader reader);
+    Task UpdateReader(Guid id, Reader reader, CancellationToken cancellationToken);
+
     /// <summary>
     /// Получить информацию о карточке вместе с записями выдачи
     /// </summary>
     /// <param name="id">идентификатор карточки</param>
+    /// <param name="cancellationToken">токен отмены</param>
     /// <returns>объект карточки</returns>
-    Task<Reader> GetReaderWithBorrowBooks(Guid id);
+    Task<Reader> GetReaderWithBorrowBooks(Guid id, CancellationToken cancellationToken);
+
     /// <summary>
     /// Получить выданные читателю книги
     /// </summary>
     /// <param name="id">идентификатор карточки</param>
+    /// <param name="cancellationToken">токен отмены</param>
     /// <returns>флаг активности карточки и список выданных книг</returns>
-    Task<(bool isActive, IReadOnlyList<BorrowedBook> books)> GetReadersBorrowBooks(Guid id);
+    Task<(bool isActive, IReadOnlyList<BorrowedBook> books)> GetReadersBorrowBooks(Guid id,
+        CancellationToken cancellationToken);
+
     /// <summary>
     /// Проверить существование карточки
     /// </summary>
     /// <param name="phone">телефон читателя</param>
+    /// <param name="cancellationToken">токен отмены</param>
     /// <returns>истина или ложб</returns>
-    Task<bool> IsExistReader(string phone);
+    Task<bool> IsExistReader(string phone, CancellationToken cancellationToken);
 
     Task<int> GetNewReadersCount(DateTime startDate, DateTime endDate, CancellationToken cancellationToken);
 }
