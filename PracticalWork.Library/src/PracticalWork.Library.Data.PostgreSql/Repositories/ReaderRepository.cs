@@ -73,6 +73,7 @@ public class ReaderRepository: IReaderRepository
             ?? throw new EntityNotFoundException($"Карточка:{id} не нашлась");
         var reader = new Reader
         {
+            IsActive = readerEntity.IsActive,
             FullName = readerEntity.FullName,
             PhoneNumber = readerEntity.PhoneNumber,
             ExpiryDate = readerEntity.ExpiryDate,

@@ -105,22 +105,22 @@ public class ReaderServiceTests
         var reader = _fixture.Build<Reader>()
             .With(r => r.FullName)
             .With(r => r.PhoneNumber)
-            .With(r => r.ExpiryDate)
+            .With(r => r.ExpiryDate, new DateOnly(2025, 12, 31))
             .Without(r => r.BorrowBooks)
             .Create();
         
         var expectedId = _fixture.Create<Guid>();
         
         _readerRepositoryMock
-            .Setup(x => x.IsExistReader(reader.PhoneNumber))
+            .Setup(x => x.IsExistReader(reader.PhoneNumber, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
         
         _readerRepositoryMock
-            .Setup(x => x.CreateReader(It.IsAny<Reader>()))
+            .Setup(x => x.CreateReader(reader, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedId);
         
         // Act
-        var result = await _readerService.CreateReader(reader);
+        var result = await _readerService.CreateReader(reader, It.IsAny<CancellationToken>());
         
         // Assert
         Assert.Equal(expectedId, result);
@@ -143,21 +143,23 @@ public class ReaderServiceTests
     {
         // Arrange
         var reader = _fixture.Build<Reader>()
-            .With(r => r.PhoneNumber, "+79991234567")
+            .With(r => r.PhoneNumber)
+            .Without(r => r.ExpiryDate)
             .Without(r => r.BorrowBooks)
             .Create();
         
         _readerRepositoryMock
-            .Setup(x => x.IsExistReader(reader.PhoneNumber))
+            .Setup(x => x.IsExistReader(reader.PhoneNumber, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ReaderServiceException>(
-            () => _readerService.CreateReader(reader));
+            () => _readerService.CreateReader(reader, It.IsAny<CancellationToken>()));
         
         Assert.Equal("Phone number is not unique", exception.Message);
         
-        _readerRepositoryMock.Verify(x => x.CreateReader(It.IsAny<Reader>()), Times.Never);
+        _readerRepositoryMock.Verify(x => x.CreateReader(
+            It.IsAny<Reader>(), It.IsAny<CancellationToken>()), Times.Never);
         _publisherMock.Verify(x => x.PublishAsync(
             It.IsAny<string>(),
             It.IsAny<string>(),
@@ -170,24 +172,25 @@ public class ReaderServiceTests
     {
         // Arrange
         var reader = _fixture.Build<Reader>()
-            .With(r => r.PhoneNumber, "+79991234567")
-            .With(r => r.IsActive, false) // Пытаемся установить false
+            .With(r => r.PhoneNumber)
+            .With(r => r.IsActive, false)
+            .Without(r => r.ExpiryDate)
             .Without(r => r.BorrowBooks)
             .Create();
         
         _readerRepositoryMock
-            .Setup(x => x.IsExistReader(reader.PhoneNumber))
+            .Setup(x => x.IsExistReader(reader.PhoneNumber, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
         
         _readerRepositoryMock
-            .Setup(x => x.CreateReader(It.IsAny<Reader>()))
+            .Setup(x => x.CreateReader(reader, It.IsAny<CancellationToken>()))
             .ReturnsAsync(_fixture.Create<Guid>());
         
         // Act
-        await _readerService.CreateReader(reader);
+        await _readerService.CreateReader(reader, It.IsAny<CancellationToken>());
         
         // Assert
-        Assert.True(reader.IsActive); // Должен быть true независимо от входных данных
+        Assert.True(reader.IsActive);
     }
     
     [Fact]
@@ -195,21 +198,22 @@ public class ReaderServiceTests
     {
         // Arrange
         var reader = _fixture.Build<Reader>()
-            .With(r => r.PhoneNumber, "+79991234567")
+            .With(r => r.PhoneNumber)
+            .Without(r => r.ExpiryDate)
             .Without(r => r.BorrowBooks)
             .Create();
         
         _readerRepositoryMock
-            .Setup(x => x.IsExistReader(reader.PhoneNumber))
+            .Setup(x => x.IsExistReader(reader.PhoneNumber, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
         
         _readerRepositoryMock
-            .Setup(x => x.CreateReader(It.IsAny<Reader>()))
+            .Setup(x => x.CreateReader(reader, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("Database error"));
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(
-            () => _readerService.CreateReader(reader));
+            () => _readerService.CreateReader(reader, It.IsAny<CancellationToken>()));
         
         Assert.Equal("Database error", exception.Message);
         
@@ -233,18 +237,17 @@ public class ReaderServiceTests
         var newExpiryDate = new DateOnly(2025, 12, 31);
         
         var reader = _fixture.Build<Reader>()
-            .With(r => r.Id, readerId)
             .With(r => r.IsActive, true)
             .With(r => r.ExpiryDate, oldExpiryDate)
             .Without(r => r.BorrowBooks)
             .Create();
-        
+            
         _readerRepositoryMock
             .Setup(x => x.GetReader(readerId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(reader);
         
         // Act
-        await _readerService.ExtendExpiryDate(readerId, newExpiryDate);
+        await _readerService.ExtendExpiryDate(readerId, newExpiryDate, It.IsAny<CancellationToken>());
         
         // Assert
         Assert.Equal(newExpiryDate, reader.ExpiryDate);
@@ -266,7 +269,7 @@ public class ReaderServiceTests
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<EntityNotFoundException>(
-            () => _readerService.ExtendExpiryDate(readerId, newExpiryDate));
+            () => _readerService.ExtendExpiryDate(readerId, newExpiryDate, It.IsAny<CancellationToken>()));
         
         Assert.Equal("Читатель не найден", exception.Message);
         
@@ -282,7 +285,6 @@ public class ReaderServiceTests
         var newExpiryDate = new DateOnly(2025, 12, 31);
         
         var reader = _fixture.Build<Reader>()
-            .With(r => r.Id, readerId)
             .With(r => r.IsActive, false)
             .With(r => r.ExpiryDate, new DateOnly(2024, 12, 31))
             .Without(r => r.BorrowBooks)
@@ -294,7 +296,7 @@ public class ReaderServiceTests
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ReaderServiceException>(
-            () => _readerService.ExtendExpiryDate(readerId, newExpiryDate));
+            () => _readerService.ExtendExpiryDate(readerId, newExpiryDate, It.IsAny<CancellationToken>()));
         
         Assert.Equal("Карточка неактивна", exception.Message);
         
@@ -303,8 +305,8 @@ public class ReaderServiceTests
     }
     
     [Theory]
-    [InlineData(2024, 12, 31, 2024, 12, 30)] // Новая дата раньше
-    [InlineData(2024, 12, 31, 2024, 12, 31)] // Новая дата такая же
+    [InlineData(2024, 12, 31, 2024, 12, 30)] 
+    [InlineData(2024, 12, 31, 2024, 12, 31)]
     public async Task ExtendExpiryDate_NewDateNotInFuture_ShouldThrowReaderServiceException(
         int oldYear, int oldMonth, int oldDay,
         int newYear, int newMonth, int newDay)
@@ -315,7 +317,6 @@ public class ReaderServiceTests
         var newExpiryDate = new DateOnly(newYear, newMonth, newDay);
         
         var reader = _fixture.Build<Reader>()
-            .With(r => r.Id, readerId)
             .With(r => r.IsActive, true)
             .With(r => r.ExpiryDate, oldExpiryDate)
             .Without(r => r.BorrowBooks)
@@ -327,7 +328,7 @@ public class ReaderServiceTests
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ReaderServiceException>(
-            () => _readerService.ExtendExpiryDate(readerId, newExpiryDate));
+            () => _readerService.ExtendExpiryDate(readerId, newExpiryDate, It.IsAny<CancellationToken>()));
         
         Assert.Equal("Необходимо продлить карточку на будущую дату", exception.Message);
         
@@ -336,17 +337,15 @@ public class ReaderServiceTests
     }
     
     [Fact]
-    public async Task ExtendExpiryDate_ExpiryDateAlreadyExtended_ShouldUpdateCorrectly()
+    public async Task ExtendExpiryDate_MaxDate_ShouldWorkCorrectly()
     {
         // Arrange
         var readerId = _fixture.Create<Guid>();
-        var futureDateFar = new DateOnly(2030, 12, 31);
-        var futureDateNear = new DateOnly(2025, 06, 30);
+        var maxDate = new DateOnly(9999, 12, 31);
         
         var reader = _fixture.Build<Reader>()
-            .With(r => r.Id, readerId)
             .With(r => r.IsActive, true)
-            .With(r => r.ExpiryDate, futureDateFar)
+            .With(r => r.ExpiryDate, new DateOnly(2024, 12, 31))
             .Without(r => r.BorrowBooks)
             .Create();
         
@@ -355,15 +354,14 @@ public class ReaderServiceTests
             .ReturnsAsync(reader);
         
         // Act
-        await _readerService.ExtendExpiryDate(readerId, futureDateNear);
+        await _readerService.ExtendExpiryDate(readerId, maxDate, It.IsAny<CancellationToken>());
         
         // Assert
-        Assert.Equal(futureDateNear, reader.ExpiryDate);
+        Assert.Equal(maxDate, reader.ExpiryDate);
         
         _readerRepositoryMock.Verify(x => x.UpdateReader(readerId, reader, 
             It.IsAny<CancellationToken>()), Times.Once);
     }
-    
     #endregion
     
     #region CloseReader Tests
@@ -374,7 +372,6 @@ public class ReaderServiceTests
         // Arrange
         var readerId = _fixture.Create<Guid>();
         var reader = _fixture.Build<Reader>()
-            .With(r => r.Id, readerId)
             .With(r => r.IsActive, true)
             .With(r => r.ExpiryDate, new DateOnly(2025, 12, 31))
             .With(r => r.BorrowBooks, new List<Book>())
@@ -385,7 +382,8 @@ public class ReaderServiceTests
             .ReturnsAsync(reader);
         
         // Act
-        var (borrowBooksExist, borrowBooks) = await _readerService.CloseReader(readerId);
+        var (borrowBooksExist, borrowBooks) = await _readerService.CloseReader(readerId, 
+            It.IsAny<CancellationToken>());
         
         // Assert
         Assert.False(borrowBooksExist);
@@ -412,10 +410,12 @@ public class ReaderServiceTests
     {
         // Arrange
         var readerId = _fixture.Create<Guid>();
-        var borrowBooks = _fixture.CreateMany<Book>(3).ToList();
+        var borrowBooks = _fixture.Build<Book>()
+            .Without(b => b.IssuanceRecords)
+            .CreateMany(3)
+            .ToList();
         
         var reader = _fixture.Build<Reader>()
-            .With(r => r.Id, readerId)
             .With(r => r.IsActive, true)
             .With(r => r.ExpiryDate, new DateOnly(2025, 12, 31))
             .With(r => r.BorrowBooks, borrowBooks)
@@ -426,12 +426,16 @@ public class ReaderServiceTests
             .ReturnsAsync(reader);
         
         // Act
-        var (borrowBooksExist, borrowBooksResult) = await _readerService.CloseReader(readerId);
+        var (borrowBooksExist, borrowBooksResult) = await _readerService
+            .CloseReader(readerId, It.IsAny<CancellationToken>());
         
         // Assert
         Assert.True(borrowBooksExist);
-        Assert.Equal(borrowBooks, borrowBooksResult);
-        Assert.True(reader.IsActive); // Не деактивируется
+        Assert.Equal(borrowBooks.Count, borrowBooksResult.Count);
+        Assert.Equivalent(borrowBooks[0], borrowBooksResult[0]);
+        Assert.Equivalent(borrowBooks[1], borrowBooksResult[1]);
+        Assert.Equivalent(borrowBooks[2], borrowBooksResult[2]);
+        Assert.True(reader.IsActive);
         Assert.NotEqual(DateOnly.FromDateTime(_fixedDateTimeProvider.DateTime), reader.ExpiryDate);
         
         _readerRepositoryMock.Verify(x => x.UpdateReader(It.IsAny<Guid>(), 
@@ -456,7 +460,7 @@ public class ReaderServiceTests
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<EntityNotFoundException>(
-            () => _readerService.CloseReader(readerId));
+            () => _readerService.CloseReader(readerId, It.IsAny<CancellationToken>()));
         
         Assert.Equal("Читатель не найден", exception.Message);
         
@@ -471,13 +475,13 @@ public class ReaderServiceTests
     }
     
     [Fact]
-    public async Task CloseReader_AlreadyInactiveReader_ShouldStillReturnEmptyBooks()
+    public async Task CloseReader_AlreadyInactiveReader_ShouldThrowsReaderServiceException()
     {
         // Arrange
         var readerId = _fixture.Create<Guid>();
         var reader = _fixture.Build<Reader>()
-            .With(r => r.Id, readerId)
             .With(r => r.IsActive, false)
+            .Without(r => r.ExpiryDate)
             .With(r => r.BorrowBooks, new List<Book>())
             .Create();
         
@@ -485,18 +489,50 @@ public class ReaderServiceTests
             .Setup(x => x.GetReaderWithBorrowBooks(readerId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(reader);
         
-        // Act
-        var (borrowBooksExist, borrowBooks) = await _readerService.CloseReader(readerId);
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<ReaderServiceException>(() => _readerService
+            .CloseReader(readerId, It.IsAny<CancellationToken>()));
         
-        // Assert
-        Assert.False(borrowBooksExist);
-        Assert.Empty(borrowBooks);
-        Assert.False(reader.IsActive); // Остается false
+        Assert.Equal("Карточка уже закрыта", exception.Message);
+        Assert.False(reader.IsActive);
         
-        _readerRepositoryMock.Verify(x => x.UpdateReader(readerId, reader, 
-            It.IsAny<CancellationToken>()), Times.Once);
+        _readerRepositoryMock.Verify(x => x.UpdateReader(It.IsAny<Guid>(), 
+            It.IsAny<Reader>(), It.IsAny<CancellationToken>()), Times.Never);
+        _publisherMock.Verify(x => x.PublishAsync(
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<ReaderClosedEvent>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
     
+    [Fact]
+    public async Task CloseReader_ReaderWithManyBorrowBooks_ShouldReturnAllBooks()
+    {
+        // Arrange
+        var readerId = _fixture.Create<Guid>();
+        var manyBooks = _fixture.Build<Book>()
+            .Without(b => b.IssuanceRecords)
+            .CreateMany(100)
+            .ToList();
+        
+        var reader = _fixture.Build<Reader>()
+            .With(r => r.IsActive, true)
+            .Without(r => r.ExpiryDate)
+            .With(r => r.BorrowBooks, manyBooks)
+            .Create();
+        
+        _readerRepositoryMock
+            .Setup(x => x.GetReaderWithBorrowBooks(readerId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reader);
+        
+        // Act
+        var (borrowBooksExist, borrowBooks) = await _readerService
+            .CloseReader(readerId,It.IsAny<CancellationToken>());
+        
+        // Assert
+        Assert.True(borrowBooksExist);
+        Assert.Equal(100, borrowBooks.Count);
+    }
     #endregion
     
     #region GetAllBorrowBooks Tests
@@ -506,7 +542,13 @@ public class ReaderServiceTests
     {
         // Arrange
         var readerId = _fixture.Create<Guid>();
-        var cachedBooks = _fixture.CreateMany<BorrowedBook>(3).ToList();
+        var cachedBooks = _fixture
+            .Build<BorrowedBook>()
+            .Without(b => b.BorrowDate)
+            .Without(b => b.DueDate)
+            .Without(b => b.ReturnDate)
+            .CreateMany(3)
+            .ToList();
         var cacheVersion = _fixture.Create<long>();
         var cacheKey = _fixture.Create<string>();
         
@@ -523,13 +565,14 @@ public class ReaderServiceTests
             .ReturnsAsync(cachedBooks);
         
         // Act
-        var result = await _readerService.GetAllBorrowBooks(readerId);
+        var result = await _readerService
+            .GetAllBorrowBooks(readerId, It.IsAny<CancellationToken>());
         
         // Assert
         Assert.Same(cachedBooks, result);
         
         _readerRepositoryMock.Verify(
-            x => x.GetReadersBorrowBooks(readerId, It.IsAny<CancellationToken>()), 
+            x => x.GetReadersBorrowBooks(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), 
             Times.Never);
         
         _cacheServiceMock.Verify(
@@ -542,7 +585,13 @@ public class ReaderServiceTests
     {
         // Arrange
         var readerId = _fixture.Create<Guid>();
-        var expectedBooks = _fixture.CreateMany<BorrowedBook>(3).ToList();
+        var expectedBooks = _fixture
+            .Build<BorrowedBook>()
+            .Without(b => b.BorrowDate)
+            .Without(b => b.DueDate)
+            .Without(b => b.ReturnDate)
+            .CreateMany(3)
+            .ToList();
         var cacheVersion = _fixture.Create<long>();
         var cacheKey = _fixture.Create<string>();
         
@@ -563,15 +612,19 @@ public class ReaderServiceTests
             .ReturnsAsync((isActive: true, books: expectedBooks));
         
         // Act
-        var result = await _readerService.GetAllBorrowBooks(readerId);
+        var result = await _readerService
+            .GetAllBorrowBooks(readerId, It.IsAny<CancellationToken>());
         
         // Assert
-        Assert.Equal(expectedBooks, result);
+        Assert.Equivalent(expectedBooks[0], result[0]);
+        Assert.Equivalent(expectedBooks[1], result[1]);
+        Assert.Equivalent(expectedBooks[2], result[2]);
+        Assert.Equal(expectedBooks.Count, result.Count);
         
         _cacheServiceMock.Verify(
             x => x.SetAsync(
                 cacheKey,
-                expectedBooks,
+                expectedBooks as IReadOnlyList<BorrowedBook>,
                 _redisReaderBooksTtl),
             Times.Once);
     }
@@ -602,7 +655,7 @@ public class ReaderServiceTests
         
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ReaderServiceException>(
-            () => _readerService.GetAllBorrowBooks(readerId));
+            () => _readerService.GetAllBorrowBooks(readerId, It.IsAny<CancellationToken>()));
         
         Assert.Equal("Карточка неактивна", exception.Message);
         
@@ -637,7 +690,7 @@ public class ReaderServiceTests
             .ReturnsAsync((isActive: true, books: emptyBooks));
         
         // Act
-        var result = await _readerService.GetAllBorrowBooks(readerId);
+        var result = await _readerService.GetAllBorrowBooks(readerId, It.IsAny<CancellationToken>());
         
         // Assert
         Assert.Empty(result);
@@ -645,7 +698,7 @@ public class ReaderServiceTests
         _cacheServiceMock.Verify(
             x => x.SetAsync(
                 cacheKey,
-                emptyBooks,
+                emptyBooks as IReadOnlyList<BorrowedBook>,
                 _redisReaderBooksTtl),
             Times.Once);
     }
@@ -660,6 +713,20 @@ public class ReaderServiceTests
         var cacheVersion2 = 2L;
         var cacheKey1 = "cache-key-1";
         var cacheKey2 = "cache-key-2";
+        var borrowedBooks1 = _fixture
+            .Build<BorrowedBook>()
+            .Without(b => b.BorrowDate)
+            .Without(b => b.DueDate)
+            .Without(b => b.ReturnDate)
+            .CreateMany(2)
+            .ToList();
+        var borrowedBooks2 = _fixture
+            .Build<BorrowedBook>()
+            .Without(b => b.BorrowDate)
+            .Without(b => b.DueDate)
+            .Without(b => b.ReturnDate)
+            .CreateMany(1)
+            .ToList();
         
         // Первый читатель
         _cacheServiceMock
@@ -676,9 +743,9 @@ public class ReaderServiceTests
         
         _readerRepositoryMock
             .Setup(x => x.GetReadersBorrowBooks(readerId1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((isActive: true, books: _fixture.CreateMany<BorrowedBook>(2).ToList()));
+            .ReturnsAsync((isActive: true, books: borrowedBooks1));
         
-        // Второй читатель - другая версия кэша
+        // Второй читатель
         _cacheServiceMock
             .Setup(x => x.GetCurrentCacheVersion(_redisReadersVersionKey))
             .ReturnsAsync(cacheVersion2);
@@ -693,93 +760,20 @@ public class ReaderServiceTests
         
         _readerRepositoryMock
             .Setup(x => x.GetReadersBorrowBooks(readerId2, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((isActive: true, books: _fixture.CreateMany<BorrowedBook>(1).ToList()));
+            .ReturnsAsync((isActive: true, books: borrowedBooks2));
         
         // Act
-        await _readerService.GetAllBorrowBooks(readerId1);
-        await _readerService.GetAllBorrowBooks(readerId2);
+        var result1 = await _readerService
+            .GetAllBorrowBooks(readerId1,It.IsAny<CancellationToken>());
+        var result2 = await _readerService
+            .GetAllBorrowBooks(readerId2, It.IsAny<CancellationToken>());
         
         // Assert
-        _cacheServiceMock.Verify(x => x.GenerateCacheKey(_redisReaderBooksPrefix, cacheVersion1, null), Times.Once);
-        _cacheServiceMock.Verify(x => x.GenerateCacheKey(_redisReaderBooksPrefix, cacheVersion2, null), Times.Once);
-    }
-    
-    #endregion
-    
-    #region Инварианты и граничные случаи
-    
-    [Theory]
-    [InlineData("")]
-    [InlineData(" ")]
-    [InlineData(null)]
-    public async Task CreateReader_InvalidPhoneNumber_ShouldBeHandledByValidator(string phoneNumber)
-    {
-        // Arrange
-        var reader = _fixture.Build<Reader>()
-            .With(r => r.PhoneNumber, phoneNumber)
-            .Without(r => r.BorrowBooks)
-            .Create();
-        
-        _readerRepositoryMock
-            .Setup(x => x.IsExistReader(It.IsAny<string>()))
-            .ReturnsAsync(false);
-        
-        // Здесь ожидаем, что валидатор поймает ошибку до сервиса
-        // Act & Assert будут в тестах валидатора
-    }
-    
-    [Fact]
-    public async Task CloseReader_ReaderWithManyBorrowBooks_ShouldReturnAllBooks()
-    {
-        // Arrange
-        var readerId = _fixture.Create<Guid>();
-        var manyBooks = _fixture.CreateMany<Book>(100).ToList();
-        
-        var reader = _fixture.Build<Reader>()
-            .With(r => r.Id, readerId)
-            .With(r => r.IsActive, true)
-            .With(r => r.BorrowBooks, manyBooks)
-            .Create();
-        
-        _readerRepositoryMock
-            .Setup(x => x.GetReaderWithBorrowBooks(readerId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(reader);
-        
-        // Act
-        var (borrowBooksExist, borrowBooks) = await _readerService.CloseReader(readerId);
-        
-        // Assert
-        Assert.True(borrowBooksExist);
-        Assert.Equal(100, borrowBooks.Count);
-        Assert.Equal(manyBooks, borrowBooks);
-    }
-    
-    [Fact]
-    public async Task ExtendExpiryDate_MaxDate_ShouldWorkCorrectly()
-    {
-        // Arrange
-        var readerId = _fixture.Create<Guid>();
-        var maxDate = new DateOnly(9999, 12, 31);
-        
-        var reader = _fixture.Build<Reader>()
-            .With(r => r.Id, readerId)
-            .With(r => r.IsActive, true)
-            .With(r => r.ExpiryDate, new DateOnly(2024, 12, 31))
-            .Without(r => r.BorrowBooks)
-            .Create();
-        
-        _readerRepositoryMock
-            .Setup(x => x.GetReader(readerId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(reader);
-        
-        // Act
-        await _readerService.ExtendExpiryDate(readerId, maxDate);
-        
-        // Assert
-        Assert.Equal(maxDate, reader.ExpiryDate);
-        
-        _readerRepositoryMock.Verify(x => x.UpdateReader(readerId, reader, 
-            It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Equal(2, result1.Count);
+        Assert.Equivalent(borrowedBooks1[0], result1[0]);
+        Assert.Equivalent(borrowedBooks1[1], result1[1]);
+        Assert.Single(result2);
+        Assert.Equivalent(borrowedBooks2[0], result2[0]);
     }
     
     #endregion

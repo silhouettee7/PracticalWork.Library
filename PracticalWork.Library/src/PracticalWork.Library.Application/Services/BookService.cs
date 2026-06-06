@@ -82,7 +82,7 @@ public sealed class BookService : IBookService
     public async Task UpdateBook(Guid id, Book updatedBook, CancellationToken cancellationToken)
     {
         var book = await _bookRepository.GetBookById(id, cancellationToken);
-        if (book.IsArchived || book.Status == BookStatus.Archived)
+        if (book.IsArchived)
         {
             throw new BookServiceException("Книга в архиве");
         }

@@ -85,6 +85,11 @@ public class ReaderService: IReaderService
         {
             return (true, readerWithBorrowBooks.BorrowBooks);
         }
+
+        if (!readerWithBorrowBooks.IsActive)
+        {
+            throw new ReaderServiceException("Карточка уже закрыта");
+        }
         readerWithBorrowBooks.IsActive = false;
         readerWithBorrowBooks.ExpiryDate = DateOnly.FromDateTime(_timeProvider.GetUtcNow().UtcDateTime);
         await _readerRepository.UpdateReader(id, readerWithBorrowBooks, cancellationToken);

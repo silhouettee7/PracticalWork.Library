@@ -35,7 +35,7 @@ public sealed class Book: ICursor
     public string CoverImagePath { get; set; }
 
     /// <summary>В архиве</summary>
-    public bool IsArchived { get; set; }
+    public bool IsArchived => Status == BookStatus.Archived;
     /// <summary>
     /// Записи о выдачах книги
     /// </summary>
@@ -52,11 +52,10 @@ public sealed class Book: ICursor
     {
         if (!CanBeArchived())
             throw new BookServiceException("Книга не может быть заархивирована. Она выдана читателю");
-        if (Status == BookStatus.Archived || IsArchived)
+        if (IsArchived)
         {
             throw new BookServiceException("Попытка повторной архивации книги");
         }
-        IsArchived = true;
         Status = BookStatus.Archived;
     }
     

@@ -224,7 +224,6 @@ public class BookServiceTests
             .With(x => x.Authors, new List<string> {existingAuthor})
             .With(x => x.Description)
             .With(x => x.Year)
-            .With(x => x.IsArchived, false)
             .With(x => x.Status, BookStatus.Available)
             .Without(b => b.IssuanceRecords)
             .Create();
@@ -282,17 +281,13 @@ public class BookServiceTests
         _cacheServiceMock.Verify(x => x.InvalidateCache(_redisBooksVersionKey), Times.Never);
     }
     
-    [Theory]
-    [InlineData(false, BookStatus.Archived)]
-    [InlineData(true, BookStatus.Available)]
-    [InlineData(true, BookStatus.Archived)]
-    public async Task UpdateBook_BookIsArchived_ShouldThrowBookServiceException(bool isArchived, BookStatus bookStatus)
+    [Fact]
+    public async Task UpdateBook_BookIsArchived_ShouldThrowBookServiceException()
     {
         // Arrange
         var bookId = _fixture.Create<Guid>();
         var archivedBook = _fixture.Build<Book>()
-            .With(b => b.IsArchived, isArchived)
-            .With(b => b.Status, bookStatus)
+            .With(b => b.Status, BookStatus.Archived)
             .Without(b => b.IssuanceRecords)
             .Create();
         var updatedBook = _fixture.Build<Book>()
@@ -325,7 +320,6 @@ public class BookServiceTests
         var bookId = _fixture.Create<Guid>();
         var book = _fixture.Build<Book>()
             .With(x => x.Title)
-            .With(x => x.IsArchived, false)
             .With(x => x.Status, BookStatus.Available)
             .Without(x => x.IssuanceRecords)
             .Create();
@@ -340,7 +334,6 @@ public class BookServiceTests
         
         // Assert
         Assert.True(book.IsArchived);
-        Assert.Equal(BookStatus.Archived, book.Status);
         Assert.Equal(bookId, result.Id);
         Assert.Equal(book.Title, result.Title);
         Assert.Equal(_fixedDateTimeProvider.DateTime, result.ArchivedAt);
@@ -359,17 +352,13 @@ public class BookServiceTests
             x.InvalidateCache(_redisBooksVersionKey), Times.Once);
     }
     
-    [Theory]
-    [InlineData(false, BookStatus.Archived)]
-    [InlineData(true, BookStatus.Available)]
-    [InlineData(true, BookStatus.Archived)]
-    public async Task ArchiveBook_FailedWhenBookIsArchived_ShouldThrowsBookServiceException(bool isArchived, BookStatus bookStatus)
+    [Fact]
+    public async Task ArchiveBook_FailedWhenBookIsArchived_ShouldThrowsBookServiceException()
     {
         // Arrange
         var bookId = _fixture.Create<Guid>();
         var book = _fixture.Build<Book>()
-            .With(x => x.IsArchived, isArchived)
-            .With(x => x.Status, bookStatus)
+            .With(x => x.Status, BookStatus.Archived)
             .Without(x => x.IssuanceRecords)
             .Create();
         
@@ -401,7 +390,6 @@ public class BookServiceTests
         // Arrange
         var bookId = _fixture.Create<Guid>();
         var book = _fixture.Build<Book>()
-            .With(x => x.IsArchived, false)
             .With(x => x.Status, BookStatus.Borrow)
             .Without(x => x.IssuanceRecords)
             .Create();
@@ -416,7 +404,6 @@ public class BookServiceTests
             _bookService.ArchiveBook(bookId, It.IsAny<CancellationToken>()));
         
         Assert.False(book.IsArchived);
-        Assert.NotEqual(BookStatus.Archived, book.Status);
         Assert.Equal("Книга не может быть заархивирована. Она выдана читателю", exception.Message);
         
         _bookRepositoryMock.Verify(x => x.UpdateBook(It.IsAny<Guid>(), It.IsAny<Book>(),

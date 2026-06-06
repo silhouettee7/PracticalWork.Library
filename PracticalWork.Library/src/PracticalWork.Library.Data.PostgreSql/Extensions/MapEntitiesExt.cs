@@ -16,7 +16,6 @@ public static class MapEntitiesExt
             Status = bookEntity.Status,
             Title = bookEntity.Title,
             Year = bookEntity.Year,
-            IsArchived = bookEntity.Status == BookStatus.Archived,
             Category = bookEntity.Category,
             Cursor = new Cursor {Id = bookEntity.Id},
             IssuanceRecords = bookEntity.IssuanceRecords?
