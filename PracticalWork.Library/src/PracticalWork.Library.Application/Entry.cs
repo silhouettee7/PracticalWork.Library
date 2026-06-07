@@ -26,7 +26,8 @@ public static class Entry
         services.AddScoped<IArchiveService, ArchiveService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IAdministrationReportService, AdministrationReportService>();
-
+        services.AddScoped<IEmailMessageTemplateService, EmailMessageTemplateService>();
+        
         return services;
     }
     
@@ -54,6 +55,7 @@ public static class Entry
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IReportGenerateService, ReportGenerateService>();
         services.AddScoped<IAdministrationReportService, AdministrationReportService>();
+        services.AddScoped<IEmailMessageTemplateService, EmailMessageTemplateService>();
         
         return services;
     }

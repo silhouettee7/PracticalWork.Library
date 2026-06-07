@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Attributes;
 using PracticalWork.Library.Models;
@@ -9,10 +10,14 @@ namespace PracticalWork.Library.Application.Services;
 public class ReportGenerateService: IReportGenerateService
 {
     private readonly TimeProvider _timeProvider;
+    private readonly ILogger<ReportGenerateService> _logger;
 
-    public ReportGenerateService(TimeProvider timeProvider)
+    public ReportGenerateService(
+        TimeProvider timeProvider,
+        ILogger<ReportGenerateService> logger)
     {
         _timeProvider = timeProvider;
+        _logger = logger;
     }
 
     public ReportGenerateResult GenerateReport<T>(IEnumerable<T> items, string fileName)
@@ -53,5 +58,25 @@ public class ReportGenerateService: IReportGenerateService
             ContentType = contentType,
             GeneratedAt = _timeProvider.GetUtcNow().UtcDateTime,
         };
+    }
+    
+    public ReportGenerateResult GenerateReportForAdministration(string reportName, BooksStatistic booksStatistic)
+    {
+        var reportFileName = $"{reportName}_{_timeProvider.GetUtcNow().UtcDateTime:yyyy-MM-dd}.csv";
+        
+        var generatedReport = GenerateReport([booksStatistic], reportFileName);
+        
+        booksStatistic.GeneratedAt = generatedReport.GeneratedAt;
+        
+        _logger.LogInformation("Отчет для администрации - {ReportName} сформирован", reportFileName);
+        
+        return generatedReport;
+    }
+
+    public ReportGenerateResult GenerateArchiveReport(string reportName, ArchiveLog archiveLog)
+    {
+        var timestamp = _timeProvider.GetUtcNow().UtcDateTime;
+        string fileName = $"{timestamp.Year}/{reportName}_{timestamp.Month}.csv";
+        return GenerateReport([archiveLog], fileName);
     }
 }

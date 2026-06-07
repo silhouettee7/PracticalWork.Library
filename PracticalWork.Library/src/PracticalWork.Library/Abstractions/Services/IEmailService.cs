@@ -16,4 +16,10 @@ public interface IEmailService
     /// </param>
     /// <param name="cancellationToken">токен отмены</param>
     Task<EmailSendResult> SendAsync(EmailMessage message, CancellationToken cancellationToken);
+
+    Task SendWeeklyReportToAdmin(string subject, string adminEmail, BooksStatistic booksStatistic,
+        string htmlTemplate, CancellationToken cancellationToken);
+
+    Task NotifyReaderAboutBorrowedBookAsync(string emailTo, BorrowedBookNotification borrowedBookNotification,
+        string subject, string emailMessageHtmlBodyTemplate, CancellationToken cancellationToken);
 }

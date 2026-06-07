@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Dtos;
+using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Extensions;
 using PracticalWork.Library.Models;
 using PracticalWork.Library.Options;
@@ -17,11 +18,13 @@ public class NotificationService: INotificationService
     private readonly SchedulerOptions _schedulerOptions;
     private readonly ILogger<NotificationService> _logger;
     private readonly TimeProvider _timeProvider;
-    
+    private readonly IEmailMessageTemplateService _emailMessageTemplateService;
+
     public NotificationService(IBorrowRepository borrowRepository,
         IEmailService emailService,
         ILogger<NotificationService> logger, 
         TimeProvider timeProvider, 
+        IEmailMessageTemplateService emailMessageTemplateService,
         IOptionsMonitor<EmailMessagesOptions> emailMessagesOptions, 
         IOptionsMonitor<SchedulerOptions> schedulerOptions)
     {
@@ -29,6 +32,7 @@ public class NotificationService: INotificationService
         _emailService = emailService;
         _logger = logger;
         _timeProvider = timeProvider;
+        _emailMessageTemplateService = emailMessageTemplateService;
         _schedulerOptions = schedulerOptions.CurrentValue;
         _emailMessagesOptions = emailMessagesOptions.CurrentValue;
     }
@@ -36,12 +40,29 @@ public class NotificationService: INotificationService
     public async Task NotifyReadersWithIssuedBorrowedBooksAsync(CancellationToken cancellationToken)
     {
         var borrowedBooks = await GetBorrowedIssuedBooksInfoAsync(cancellationToken);
-        var emailMessageHtmlBodyTemplate = await GetEmailMessageHtmlBodyTemplateAsync(cancellationToken);
-        
+        var emailMessageHtmlBodyTemplate = await _emailMessageTemplateService.GetEmailMessageHtmlBodyTemplateAsync(
+            _emailMessagesOptions.Notification.TemplateFileName, cancellationToken);;
+            
         foreach (var borrowBook in borrowedBooks)
         {
-            await NotifyReaderAboutBorrowedBookAsync(borrowBook, 
-                emailMessageHtmlBodyTemplate,cancellationToken);
+            try
+            {
+                await _emailService.NotifyReaderAboutBorrowedBookAsync(
+                    borrowBook.ReaderFullName,
+                    borrowBook.ToBorrowedBookNotification(_timeProvider),
+                    _emailMessagesOptions.Notification.Subject,
+                    emailMessageHtmlBodyTemplate, cancellationToken);
+            }
+            catch (EmailServiceException)
+            {
+                _logger.LogError("Читатель {adminEmail} не получил письма. Отправка не прерывается",
+                    borrowBook.ReaderFullName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Произошла неизвестная ошибка при отправке сообщения. Отправка не прерывается");
+            }
+            await UpdateLastEmailSentAsync(borrowBook.Id, cancellationToken);
         }
     }
     
@@ -55,50 +76,7 @@ public class NotificationService: INotificationService
         return await _borrowRepository.GetBorrowedIssuedBooksInfo(
             dateOneDayAgo, dateThreeDaysAfter, dateToleranceMinutesAgo, cancellationToken);
     }
-
-    private async Task<string> GetEmailMessageHtmlBodyTemplateAsync(CancellationToken cancellationToken)
-    {
-        var fileName = _emailMessagesOptions.Notification.TemplateFileName; 
-        var path = Path.Combine(Directory.GetCurrentDirectory(),  fileName );
-        
-        return await File.ReadAllTextAsync(path, cancellationToken);
-    }
-
-    private async Task NotifyReaderAboutBorrowedBookAsync(BorrowedIssuedBookInfoDto borrowBook, 
-        string emailMessageHtmlBodyTemplate, CancellationToken cancellationToken)
-    {
-        var borrowedBookNotification = borrowBook.ToBorrowedBookNotification(_timeProvider);
-        var emailMessage = GetEmailMessage(emailMessageHtmlBodyTemplate, borrowedBookNotification);
-        var sentResult = await _emailService.SendAsync(emailMessage, cancellationToken);
-        if (sentResult.IsSuccess)
-        {
-            _logger.LogInformation("Уведомление отправлено для {ReaderFullName}", borrowedBookNotification.ReaderFullName);
-            await UpdateLastEmailSentAsync(borrowBook.Id, cancellationToken);
-        }
-        else
-        {
-            _logger.LogError("Ошибка отправки уведомления для {ReaderFullName}", borrowedBookNotification.ReaderFullName);
-        }
-    }
     
-    private EmailMessage GetEmailMessage(string emailMessageHtmlBodyTemplate, 
-        BorrowedBookNotification borrowedBookNotification)
-    {
-        // в дальнейшем заменить на почту настоящих пользователей из БД
-        var shortGuid = Guid.NewGuid().ToString()[..8];
-        var emailTo = $"{shortGuid}@test.com";
-        var recipientName = borrowedBookNotification.ReaderFullName;
-        var subject = _emailMessagesOptions.Notification.Subject;
-        var emailMessage = new EmailMessage(emailTo, subject, 
-            emailMessageHtmlBodyTemplate, true)
-        {
-            RecipientName = recipientName
-        };
-        emailMessage.Personalize(borrowedBookNotification);
-        
-        return emailMessage;
-    }
-
     private async Task UpdateLastEmailSentAsync(Guid id, CancellationToken cancellationToken)
     {
         try
@@ -110,8 +88,8 @@ public class NotificationService: INotificationService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка обновления даты отправки, возможен повтор уведомления");
-            throw;
+            _logger.LogError(ex, "Письмо отправилось, но обновление даты отправки не произошло. Идентификатор выдачи:{id}." +
+                                 " Возможен повтор уведомления при перезапуске задачи (если письмо было успешно отправлено)", id);
         }
     }
 }

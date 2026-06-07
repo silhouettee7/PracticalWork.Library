@@ -65,7 +65,8 @@ public class ArchiveService: IArchiveService
                                "Время:{TotalTime}\n", 
             archiveLog.TotalCount, archiveLog.SuccessCount, archiveLog.WrongCount, archiveLog.TotalTime);
         
-        var report = GenerateReport(archiveLog);
+        var report = _reportGenerateService.GenerateArchiveReport(
+            _reportsOptions.ReportAboutArchive, archiveLog);
         await SaveReportAsync(report, cancellationToken);
     }
 
@@ -108,14 +109,6 @@ public class ArchiveService: IArchiveService
         archiveLog.WrongReasons = string.Join(";\n", wrongReasons);
         
         return archiveLog;
-    }
-
-    private ReportGenerateResult GenerateReport(ArchiveLog archiveLog)
-    {
-        var reportName = _reportsOptions.ReportAboutArchive;
-        var timestamp = _timeProvider.GetUtcNow().UtcDateTime;
-        string fileName = $"{timestamp.Year}/{reportName}_{timestamp.Month}.csv";
-        return _reportGenerateService.GenerateReport([archiveLog], fileName);
     }
 
     private async Task SaveReportAsync(ReportGenerateResult report, CancellationToken cancellationToken)

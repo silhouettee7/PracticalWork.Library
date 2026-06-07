@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using PracticalWork.Library.Abstractions.Services;
 using PracticalWork.Library.Abstractions.Storage;
 using PracticalWork.Library.Enums;
+using PracticalWork.Library.Exceptions;
 using PracticalWork.Library.Models;
 using PracticalWork.Library.Options;
 
@@ -19,6 +20,7 @@ public class AdministrationReportService: IAdministrationReportService
     private readonly IReportGenerateService _reportGenerateService;
     private readonly IFileStorageService _fileStorageService;
     private readonly IEmailService _emailService;
+    private readonly IEmailMessageTemplateService _emailMessageTemplateService;
     private readonly ILogger<AdministrationReportService> _logger;
     private readonly string _reportsAdministrationBucketName;
     private readonly IReadOnlyList<string> _adminEmails;
@@ -38,7 +40,9 @@ public class AdministrationReportService: IAdministrationReportService
         IReportGenerateService reportGenerateService,
         ILogger<AdministrationReportService> logger,
         IOptionsMonitor<MinioOptions> minioOptions,
-        TimeProvider timeProvider, IAdministrationReportRepository administrationReportRepository)
+        TimeProvider timeProvider, 
+        IAdministrationReportRepository administrationReportRepository, 
+        IEmailMessageTemplateService emailMessageTemplateService)
     {
         _emailMessagesOptions = emailMessagesOptions.CurrentValue;
         _backgroundReportsOptions = backgroundReportsOptions.CurrentValue;
@@ -56,6 +60,7 @@ public class AdministrationReportService: IAdministrationReportService
         _fileStorageService = fileStorageService;
         _timeProvider = timeProvider;
         _administrationReportRepository = administrationReportRepository;
+        _emailMessageTemplateService = emailMessageTemplateService;
     }
     
     public async Task CreateReportForAdministration(CancellationToken cancellationToken)
@@ -64,16 +69,31 @@ public class AdministrationReportService: IAdministrationReportService
         
         var booksStatistic = await GetBooksStatisticAsync(cancellationToken);
         
-        var generatedReport = GenerateReport(booksStatistic);
+        var generatedReport = _reportGenerateService.GenerateReportForAdministration(
+            _backgroundReportsOptions.ReportForAdministration, booksStatistic);
         
         booksStatistic.FileUrl = await SaveReportAndGetFileUrlAsync(generatedReport, cancellationToken);
 
-        var htmlTemplate = await GetEmailMessageHtmlBodyTemplateAsync(cancellationToken);
+        var htmlTemplate = await _emailMessageTemplateService.GetEmailMessageHtmlBodyTemplateAsync(
+            _emailMessagesOptions.ReportForAdministration.TemplateFileName, cancellationToken);
         
         foreach (var adminEmail in _adminEmails)
         {
-            await SendWeeklyReportToAdmin(adminEmail, booksStatistic, 
-                htmlTemplate, cancellationToken);
+            try
+            {
+                await _emailService.SendWeeklyReportToAdmin(
+                    _emailMessagesOptions.ReportForAdministration.Subject,
+                    adminEmail, booksStatistic,
+                    htmlTemplate, cancellationToken);
+            }
+            catch (EmailServiceException)
+            {
+                _logger.LogError("Администратор {adminEmail} не получил письма. Отправка не прерывается", adminEmail);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Произошла неизвестная ошибка при отправке сообщения. Отправка не прерывается");
+            }
         }
     }
 
@@ -97,7 +117,7 @@ public class AdministrationReportService: IAdministrationReportService
 
         if (borrowedStatistic is null)
         {
-            _logger.LogInformation("Нет статистики за указанный период: {startDate} - {endDate}", startDate, endDate);
+            _logger.LogInformation("Нет статистики по выдачам за указанный период: {startDate} - {endDate}", startDate, endDate);
         }
         
         reportAdm.BorrowedCount = borrowedStatistic?.BorrowedCount ?? 0;
@@ -107,20 +127,6 @@ public class AdministrationReportService: IAdministrationReportService
         reportAdm.PeriodTo = endDate.AddDays(-1);
 
         return reportAdm;
-    }
-
-    private ReportGenerateResult GenerateReport(BooksStatistic booksStatistic)
-    {
-        var reportName = _backgroundReportsOptions.ReportForAdministration;
-        var reportFileName = $"{reportName}_{_timeProvider.GetUtcNow().UtcDateTime:yyyy-MM-dd}.csv";
-        
-        var generatedReport = _reportGenerateService.GenerateReport([booksStatistic], reportFileName);
-        
-        booksStatistic.GeneratedAt = generatedReport.GeneratedAt;
-        
-        _logger.LogInformation("Отчет для администрации - {ReportName} сформирован", reportFileName);
-        
-        return generatedReport;
     }
 
     private async Task<string> SaveReportAndGetFileUrlAsync(ReportGenerateResult generatedReport, 
@@ -151,32 +157,5 @@ public class AdministrationReportService: IAdministrationReportService
         _logger.LogInformation("Отчет для администрации - {ReportName} сохранен", report.Name);
 
         return report.FilePath;
-    }
-    
-    private async Task<string> GetEmailMessageHtmlBodyTemplateAsync(CancellationToken cancellationToken)
-    {
-        var fileName = _emailMessagesOptions.ReportForAdministration.TemplateFileName;
-        var htmlTemplatePath = Path.Combine(Directory.GetCurrentDirectory(), fileName); 
-        
-        return await File.ReadAllTextAsync(htmlTemplatePath, cancellationToken);
-    }
-
-    private async Task SendWeeklyReportToAdmin(string adminEmail, BooksStatistic booksStatistic, 
-        string htmlTemplate, CancellationToken cancellationToken)
-    {
-        var subject = _emailMessagesOptions.ReportForAdministration.Subject;
-        var email = new EmailMessage(adminEmail, subject, htmlTemplate, true);
-        email.Personalize(booksStatistic);
-        
-        var sentResult = await _emailService.SendAsync(email, cancellationToken);
-        
-        if (sentResult.IsSuccess)
-        {
-            _logger.LogInformation("Отчет успешно отправлен для администратора: {adminEmail}", adminEmail);
-        }
-        else
-        {
-            _logger.LogError("Ошибка отправки отчета администратору: {adminEmail}", adminEmail);
-        }
     }
 }
