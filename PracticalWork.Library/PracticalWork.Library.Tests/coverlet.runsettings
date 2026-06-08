@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <ExcludeByFile>
+            **/Migrations/*.cs,
+            **/Program.cs,
+            **/Startup.cs,
+            **/DbContext.cs,
+            **/*.g.cs,
+            **/*.Designer.cs,
+            **/obj/**/*.cs,
+            **/bin/**/*.cs
+          </ExcludeByFile>
+          <ExcludeByAttribute>
+            System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute,
+            System.CodeDom.Compiler.GeneratedCodeAttribute
+          </ExcludeByAttribute>
+          <IncludeTestAssembly>false</IncludeTestAssembly>
+          <SkipAutoProps>false</SkipAutoProps>
+          <DeterministicReport>true</DeterministicReport>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+  
+  <RunConfiguration>
+    <MaxCpuCount>0</MaxCpuCount>
+    <ResultsDirectory>./TestResults</ResultsDirectory>
+  </RunConfiguration>
+</RunSettings>
