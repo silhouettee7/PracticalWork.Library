@@ -8,6 +8,7 @@ using Minio.Exceptions;
 
 namespace Data.Minio;
 
+/// <inheritdoc />
 public class MinioService : IFileStorageService
 {
     private readonly IMinioClient _minioClient;
@@ -23,6 +24,7 @@ public class MinioService : IFileStorageService
             .Build();
     }
 
+    /// <inheritdoc />
     public async Task UploadFileAsync(string bucket, string fileName, Stream fileStream, string contentType,
         CancellationToken cancellationToken = default)
     {
@@ -44,6 +46,7 @@ public class MinioService : IFileStorageService
             .WithContentType(contentType), cancellationToken);
     }
 
+    /// <inheritdoc />
     public async Task<string> GetFileLinkAsync(string bucket, string fileName, CancellationToken cancellationToken = default)
     {
         await CheckExistingAsync(bucket, fileName);
@@ -59,6 +62,7 @@ public class MinioService : IFileStorageService
         return url;
     }
 
+    /// <inheritdoc />
     public async Task SetBucketFilesLifeTimeAsync(string bucket, DateTime deleteDate, string prefix, CancellationToken cancellationToken = default)
     {
         var rule = new LifecycleRule

@@ -3,6 +3,9 @@ using PracticalWork.Library.Attributes;
 
 namespace PracticalWork.Library.Models;
 
+/// <summary>
+/// Информация об архивировании книг
+/// </summary>
 public class ArchiveLog
 {
     [TableColumn("Кол-во успешных",3)]

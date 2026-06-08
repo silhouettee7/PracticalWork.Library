@@ -12,7 +12,8 @@ public class AdministrationReportRepository: IAdministrationReportRepository
     {
         _context = context;
     }
-    
+
+    /// <inheritdoc />
     public async Task SaveReportAsync(AdministrationReport report, CancellationToken cancellationToken)
     {
         var entity = new AdministrationReportEntity

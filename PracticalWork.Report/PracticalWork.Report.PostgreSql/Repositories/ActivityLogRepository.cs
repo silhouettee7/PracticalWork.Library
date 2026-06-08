@@ -15,7 +15,8 @@ public class ActivityLogRepository: IActivityLogRepository
     {
         _context = context;
     }
-    
+
+    /// <inheritdoc />
     public async Task AddLogAsync(ActivityLog activityLog)
     {
         ActivityLogEntity entity = new()
@@ -28,6 +29,7 @@ public class ActivityLogRepository: IActivityLogRepository
         await _context.SaveChangesAsync();
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<ActivityLog>> GetLogsPageAsync(CursorPaginationRequest? request, 
         DateOnly? periodFrom, DateOnly? periodTo, string[]? eventTypes)
     {
@@ -35,6 +37,7 @@ public class ActivityLogRepository: IActivityLogRepository
            query.CursorPage(request ?? new CursorPaginationRequest { Forward = true, PageSize = 20 }));
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<ActivityLog>> GetLogsAsync(DateOnly? periodFrom, DateOnly? periodTo, string[]? eventTypes)
     {
         return await GetLogsAsync(periodFrom, periodTo, eventTypes, null);

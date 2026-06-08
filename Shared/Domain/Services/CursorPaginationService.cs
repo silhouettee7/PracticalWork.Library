@@ -4,9 +4,10 @@ using Domain.Models;
 
 namespace Domain.Services;
 
-
+/// <inheritdoc />
 public class CursorPaginationService<TModel>: ICursorPaginationService<TModel>  where TModel : ICursor
 {
+    /// <inheritdoc />
     public CursorPaginationResponse<TModel> ToCursorPageResponse(IReadOnlyList<TModel> page, CursorPaginationRequest request)
     {
         var additionalElem = page

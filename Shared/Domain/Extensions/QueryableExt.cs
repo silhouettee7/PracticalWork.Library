@@ -5,12 +5,27 @@ namespace Domain.Extensions;
 
 public static class QueryableExt
 {
+    /// <summary>
+    /// Курсорная пагинация
+    /// </summary>
+    /// <param name="data">запрос в источник</param>
+    /// <param name="request">объект пагинации</param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns>запрос в источник с пагинацией</returns>
     public static IQueryable<T> CursorPage<T>(this IQueryable<T> data, CursorPaginationRequest request) where T : EntityBase
     {
         return request.Cursor == null
             ? CursorFirstPage(data, request)
             : CursorOtherPage(data, request);
     }
+    
+    /// <summary>
+    /// Курсорная пагинация для первой страницы
+    /// </summary>
+    /// <param name="data">источник данных</param>
+    /// <param name="request">объект пагинации</param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns>запрос в источник с пагинацией</returns>
     public static IQueryable<T> CursorFirstPage<T>(this IQueryable<T> data, 
         CursorPaginationRequest request) where T : EntityBase
     {
@@ -25,6 +40,13 @@ public static class QueryableExt
             .Take(request.PageSize + 1);
     }
     
+    /// <summary>
+    /// Курсорная пагинация кроме первой страницы
+    /// </summary>
+    /// <param name="data">источник данных</param>
+    /// <param name="request">объект пагинации</param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns>запрос в источник с пагинацией</returns>
     public static IQueryable<T> CursorOtherPage<T>(this IQueryable<T> data, 
         CursorPaginationRequest request) where T : EntityBase
     {

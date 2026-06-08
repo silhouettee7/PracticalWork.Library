@@ -20,6 +20,7 @@ public sealed class BookRepository : IBookRepository
         _appDbContext = appDbContext;
     }
 
+    /// <inheritdoc />
     public async Task<Guid> CreateBook(Book book, CancellationToken cancellationToken)
     {
         AbstractBookEntity entity = book.Category switch
@@ -45,6 +46,7 @@ public sealed class BookRepository : IBookRepository
         return entity.Id;
     }
 
+    /// <inheritdoc />
     public async Task<Book> GetBookById(Guid id, CancellationToken cancellationToken)
     {
         var bookEntity = await _appDbContext.Books
@@ -53,6 +55,7 @@ public sealed class BookRepository : IBookRepository
         return bookEntity.ToBook();
     }
 
+    /// <inheritdoc />
     public async Task<(Guid id, Book book)> GetBookByTitle(string title, CancellationToken cancellationToken)
     {
         var bookEntity = await _appDbContext.Books
@@ -61,6 +64,7 @@ public sealed class BookRepository : IBookRepository
         return (bookEntity.Id,bookEntity.ToBook());
     }
 
+    /// <inheritdoc />
     public async Task UpdateBook(Guid id, Book book, CancellationToken cancellationToken)
     {
         var entity = await _appDbContext.Books.SingleOrDefaultAsync(b => b.Id == id, cancellationToken: cancellationToken) 
@@ -79,6 +83,7 @@ public sealed class BookRepository : IBookRepository
         await _appDbContext.SaveChangesAsync(cancellationToken);
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<Book>> GetBooksPageFilteringByFields(CursorPaginationRequest request,
         BookStatus? status, BookCategory? category, string author, CancellationToken cancellationToken)
     {
@@ -99,6 +104,7 @@ public sealed class BookRepository : IBookRepository
         return await entities.ToListAsync(cancellationToken: cancellationToken);
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<Book>> GetNonArchivedBooksPageWithIssuanceRecords(
         CursorPaginationRequest request, CancellationToken cancellationToken)
     {
@@ -111,6 +117,7 @@ public sealed class BookRepository : IBookRepository
         return await entities.ToListAsync(cancellationToken: cancellationToken);
     }
 
+    /// <inheritdoc />
     public async Task<List<AvailableOldBookDto>> GetAvailableOldBooksPage(
         DateOnly borrowDateTo, CursorPaginationRequest request, 
         CancellationToken cancellationToken)
@@ -129,6 +136,7 @@ public sealed class BookRepository : IBookRepository
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
+    /// <inheritdoc />
     public async Task<int> GetAddedBooksCount(DateTime startDate, DateTime endDate, 
         CancellationToken cancellationToken)
     {

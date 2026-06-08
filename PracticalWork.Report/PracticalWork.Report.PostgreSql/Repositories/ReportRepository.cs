@@ -14,6 +14,8 @@ public class ReportRepository: IReportRepository
     {
         _context = context;
     }
+
+    /// <inheritdoc />
     public async Task<Guid> CreateReport(Models.Report report)
     {
         var entity = new ReportEntity
@@ -28,6 +30,7 @@ public class ReportRepository: IReportRepository
         return entity.Id;
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<Models.Report>> GetReadyReports()
     {
         var entities = await _context.Reports
@@ -46,6 +49,7 @@ public class ReportRepository: IReportRepository
             .ToList();
     }
 
+    /// <inheritdoc />
     public async Task<Models.Report> GetReportById(Guid reportId)
     {
         var reportEntity = await _context.Reports
@@ -64,6 +68,7 @@ public class ReportRepository: IReportRepository
         };
     }
 
+    /// <inheritdoc />
     public async Task<(Guid id, Models.Report report)> GetReportByName(string reportName)
     {
         var reportEntity = await _context.Reports
@@ -82,6 +87,7 @@ public class ReportRepository: IReportRepository
         });
     }
 
+    /// <inheritdoc />
     public async Task UpdateReport(Guid id, Models.Report report)
     {
         var reportEntity = await _context.Reports
@@ -95,19 +101,5 @@ public class ReportRepository: IReportRepository
         reportEntity.Status = report.Status;
         reportEntity.FilePath = report.FilePath;
         await _context.SaveChangesAsync();
-    }
-
-    public async Task SaveReportAsync(Models.Report report, CancellationToken cancellationToken)
-    {
-        var entity = new ReportEntity
-        {
-            Status = report.Status,
-            FilePath = report.FilePath,
-            Name = report.Name,
-            GeneratedAt = report.GeneratedAt,
-            CreatedAt = report.CreatedAt
-        };
-        await _context.Reports.AddAsync(entity, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
     }
 }

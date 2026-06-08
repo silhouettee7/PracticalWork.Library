@@ -63,9 +63,22 @@ public interface IBookRepository
     /// <returns>список книг</returns>
     Task<IReadOnlyList<Book>> GetNonArchivedBooksPageWithIssuanceRecords(CursorPaginationRequest request,
         CancellationToken cancellationToken);
-    
+    /// <summary>
+    /// Получить не выданные старые книги
+    /// </summary>
+    /// <param name="borrowDateTo">до какой даты</param>
+    /// <param name="request">запрсо пагинации</param>
+    /// <param name="cancellationToken">токен отмены</param>
+    /// <returns>список книг</returns>
     Task<List<AvailableOldBookDto>> GetAvailableOldBooksPage(DateOnly borrowDateTo,
         CursorPaginationRequest request, CancellationToken cancellationToken);
+    /// <summary>
+    /// Получить количество добавленных книг
+    /// </summary>
+    /// <param name="startDate">с какой даты</param>
+    /// <param name="endDate">по какую дату</param>
+    /// <param name="cancellationToken">токен отмены</param>
+    /// <returns>количество</returns>
     Task<int> GetAddedBooksCount(DateTime startDate, DateTime endDate, 
         CancellationToken cancellationToken);
 }

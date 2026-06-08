@@ -56,6 +56,12 @@ public interface IReaderRepository
     /// <param name="cancellationToken">токен отмены</param>
     /// <returns>истина или ложб</returns>
     Task<bool> IsExistReader(string phone, CancellationToken cancellationToken);
-
+    /// <summary>
+    /// Получить кол-во новых читателей
+    /// </summary>
+    /// <param name="startDate">с какой даты</param>
+    /// <param name="endDate">по какую дату</param>
+    /// <param name="cancellationToken">токен отмены</param>
+    /// <returns>кол-во</returns>
     Task<int> GetNewReadersCount(DateTime startDate, DateTime endDate, CancellationToken cancellationToken);
 }

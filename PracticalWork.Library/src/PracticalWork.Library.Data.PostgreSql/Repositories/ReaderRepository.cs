@@ -15,6 +15,8 @@ public class ReaderRepository: IReaderRepository
     {
         _appDbContext = context;
     }
+
+    /// <inheritdoc />
     public async Task<Guid> CreateReader(Reader reader, CancellationToken cancellationToken)
     {
         ReaderEntity readerEntity = new()
@@ -32,11 +34,13 @@ public class ReaderRepository: IReaderRepository
         return readerEntity.Id;
     }
 
+    /// <inheritdoc />
     public async Task<bool> IsExistReader(string phone, CancellationToken cancellationToken)
     {
         return await _appDbContext.Readers.AnyAsync(reader => reader.PhoneNumber == phone, cancellationToken: cancellationToken);
     }
 
+    /// <inheritdoc />
     public async Task<Reader> GetReader(Guid id, CancellationToken cancellationToken)
     {
         var reader = await _appDbContext.Readers
@@ -51,6 +55,7 @@ public class ReaderRepository: IReaderRepository
         };
     }
 
+    /// <inheritdoc />
     public async Task UpdateReader(Guid id, Reader reader, CancellationToken cancellationToken)
     {
         var readerEntity = await _appDbContext.Readers.SingleOrDefaultAsync(r => r.Id == id, cancellationToken: cancellationToken) 
@@ -63,6 +68,7 @@ public class ReaderRepository: IReaderRepository
         await _appDbContext.SaveChangesAsync(cancellationToken);
     }
 
+    /// <inheritdoc />
     public async Task<Reader> GetReaderWithBorrowBooks(Guid id, CancellationToken cancellationToken)
     {
         var readerEntity = await _appDbContext.Readers
@@ -84,6 +90,7 @@ public class ReaderRepository: IReaderRepository
         return reader;
     }
 
+    /// <inheritdoc />
     public async Task<(bool isActive, IReadOnlyList<BookBorrowWIthDetailInfo> books)> GetReadersBorrowBooks(Guid id,
         CancellationToken cancellationToken)
     {
@@ -111,6 +118,7 @@ public class ReaderRepository: IReaderRepository
             .ToList());
     }
 
+    /// <inheritdoc />
     public async Task<int> GetNewReadersCount(DateTime startDate, DateTime endDate, 
         CancellationToken cancellationToken)
     {

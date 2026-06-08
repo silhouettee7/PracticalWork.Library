@@ -3,6 +3,7 @@ using PracticalWork.Library.Contracts.v1.Enums;
 
 namespace PracticalWork.Library.Contracts.v1.Books.Response;
 
+/// <inheritdoc />
 public sealed record BookWithIssuanceRecordsResponse(
     string Title,
     BookCategory Category,

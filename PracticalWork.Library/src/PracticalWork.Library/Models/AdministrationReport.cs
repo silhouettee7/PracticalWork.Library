@@ -21,6 +21,8 @@ public class AdministrationReport
     /// Статус готовности отчета
     /// </summary>
     public AdministrationReportStatus Status { get; set; } = AdministrationReportStatus.InProgress;
-
+    /// <summary>
+    /// Дата создания
+    /// </summary>
     public DateTime CreatedAt { get; set; }
 }

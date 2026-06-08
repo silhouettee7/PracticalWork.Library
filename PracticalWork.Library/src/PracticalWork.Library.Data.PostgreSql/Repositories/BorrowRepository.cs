@@ -18,6 +18,7 @@ public class BorrowRepository: IBorrowRepository
         _appDbContext = appDbContext;
     }
 
+    /// <inheritdoc />
     public async Task CreateBookBorrow(Guid bookId, Guid readerId, BookBorrow bookBorrow,
         CancellationToken cancellationToken)
     {
@@ -33,6 +34,7 @@ public class BorrowRepository: IBorrowRepository
         await _appDbContext.SaveChangesAsync(cancellationToken);
     }
 
+    /// <inheritdoc />
     public async Task<(Guid id, BookBorrow bookBorrow)> GetBookBorrow(Guid bookId, Guid readerId,
         CancellationToken cancellationToken)
     {
@@ -44,6 +46,7 @@ public class BorrowRepository: IBorrowRepository
         return (entity.Id, entity.ToBookBorrow());
     }
 
+    /// <inheritdoc />
     public async Task ReturnBookBorrow(Guid bookBorrowId, BookBorrow bookBorrow,
         CancellationToken cancellationToken)
     {
@@ -58,6 +61,7 @@ public class BorrowRepository: IBorrowRepository
         await _appDbContext.SaveChangesAsync(cancellationToken);
     }
 
+    /// <inheritdoc />
     public async Task<List<BorrowedIssuedBookInfoDto>> GetBorrowedIssuedBooksInfo(
         DateOnly from, DateOnly to, DateTime dateToleranceMinutesAgo, CancellationToken cancellationToken)
     {
@@ -79,6 +83,7 @@ public class BorrowRepository: IBorrowRepository
             .ToListAsync(cancellationToken: cancellationToken);
     }
 
+    /// <inheritdoc />
     public async Task UpdateLastEmailSentAsync(Guid bookBorrowId, DateTime timestamp, CancellationToken cancellationToken)
     {
         await _appDbContext.BookBorrows
@@ -88,6 +93,7 @@ public class BorrowRepository: IBorrowRepository
                 cancellationToken: cancellationToken);
     }
 
+    /// <inheritdoc />
     public async Task<BorrowBookStatisticDto> GetBorrowBookStatistic(DateOnly from, DateOnly to,
         CancellationToken cancellationToken)
     {

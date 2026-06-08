@@ -7,5 +7,11 @@ namespace PracticalWork.Library.Abstractions.Storage;
 /// </summary>
 public interface IAdministrationReportRepository
 {
+    /// <summary>
+    /// Сохранить отчет
+    /// </summary>
+    /// <param name="report">отчет</param>
+    /// <param name="cancellationToken">токен отмены</param>
+    /// <returns></returns>
     Task SaveReportAsync(AdministrationReport report, CancellationToken cancellationToken);
 }

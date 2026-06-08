@@ -6,6 +6,7 @@ using PracticalWork.Library.Contracts.v1.Books.Response;
 using PracticalWork.Library.Contracts.v1.Reader.Request;
 using PracticalWork.Library.Contracts.v1.Reader.Response;
 using PracticalWork.Library.Controllers.Mappers.v1;
+using PracticalWork.Library.Models;
 
 namespace PracticalWork.Library.Controllers.Api.v1;
 
@@ -82,7 +83,7 @@ public class ReaderController: Controller
     [HttpGet]
     [Route("/{id:guid}/books")]
     [Produces("application/json")]
-    [ProducesResponseType<List<BorrowedBookResponse>>(200)]
+    [ProducesResponseType<List<BookBorrowWIthDetailInfo>>(200)]
     [ProducesResponseType(400)]
     [ProducesResponseType(404)]
     [ProducesResponseType(500)]

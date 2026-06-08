@@ -1,5 +1,8 @@
 namespace PracticalWork.Library.Attributes;
 
+/// <summary>
+/// Атрибут для генерации отчета в csv
+/// </summary>
 [AttributeUsage(AttributeTargets.Property)]
 public class TableColumnAttribute : Attribute
 {

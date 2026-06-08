@@ -19,6 +19,8 @@ public class RabbitMqPublisher: IRabbitMqPublisher
         _channelPool = channelPool;
         _logger = logger;
     }
+
+    /// <inheritdoc />
     public async Task<bool> PublishAsync<T>(string exchange, string routingKey, T message, CancellationToken cancellationToken = default)
     {
         IChannel? channel = null;

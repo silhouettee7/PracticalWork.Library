@@ -16,10 +16,26 @@ public interface IEmailService
     /// </param>
     /// <param name="cancellationToken">токен отмены</param>
     Task<EmailSendResult> SendAsync(EmailMessage message, CancellationToken cancellationToken);
-
+    /// <summary>
+    /// Отправить еженедельный отчет администрации
+    /// </summary>
+    /// <param name="subject">тема</param>
+    /// <param name="adminEmail">почта</param>
+    /// <param name="booksStatistic">данные</param>
+    /// <param name="htmlTemplate">шаблон</param>
+    /// <param name="cancellationToken">токен отмены</param>
+    /// <returns></returns>
     Task SendWeeklyReportToAdmin(string subject, string adminEmail, BooksStatistic booksStatistic,
         string htmlTemplate, CancellationToken cancellationToken);
-
+    /// <summary>
+    /// Отправить письмо читателю о выдачах
+    /// </summary>
+    /// <param name="emailTo">почта</param>
+    /// <param name="borrowedBookNotification">данные</param>
+    /// <param name="subject">тема</param>
+    /// <param name="emailMessageHtmlBodyTemplate">шаблон</param>
+    /// <param name="cancellationToken">токен отмены</param>
+    /// <returns></returns>
     Task NotifyReaderAboutBorrowedBookAsync(string emailTo, BorrowedBookNotification borrowedBookNotification,
         string subject, string emailMessageHtmlBodyTemplate, CancellationToken cancellationToken);
 }
