@@ -37,14 +37,15 @@ public class Report
     public ReportStatus Status { get; set; } = ReportStatus.InProgress;
 
     public DateTime CreatedAt { get; set; }
-    
+
     /// <summary>
     /// Пометить отчет как сгенерированный
     /// </summary>
     /// <param name="fileName">название отчета</param>
-    public void MarkAsGenerated(string fileName)
+    /// <param name="timeProvider">провайдер для времени</param>
+    public void MarkAsGenerated(string fileName, TimeProvider timeProvider)
     {
-        GeneratedAt = DateTime.UtcNow;
+        GeneratedAt = timeProvider.GetUtcNow().DateTime;
         Status = ReportStatus.Generated;
         Name = fileName;
     }

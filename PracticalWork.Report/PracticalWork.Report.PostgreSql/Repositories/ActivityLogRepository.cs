@@ -44,7 +44,7 @@ public class ActivityLogRepository: IActivityLogRepository
         Func<IQueryable<ActivityLogEntity>, IQueryable<ActivityLogEntity>>? query)
     {
         DateTime? dtFrom = periodFrom?.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc); 
-        DateTime? dtTo = periodTo?.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        DateTime? dtTo = periodTo?.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
         var filteredEntities = _context.ActivityLogs
             .Where(l => eventTypes == null || eventTypes.Length == 0 || eventTypes.Contains(l.EventType))
             .Where(l => !dtFrom.HasValue || l.EventDate >= dtFrom)

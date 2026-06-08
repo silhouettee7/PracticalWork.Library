@@ -20,6 +20,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PracticalWork.Report.Contro
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PracticalWork.Report.Web", "PracticalWork.Report.Web\PracticalWork.Report.Web.csproj", "{0B0B2A87-BA47-4F58-A966-53373B47C56A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PracticalWork.Report.Tests", "PracticalWork.Report.Tests\PracticalWork.Report.Tests.csproj", "{6E18D771-08C5-415D-B934-0C262775AA0F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,6 +60,10 @@ Global
 		{0B0B2A87-BA47-4F58-A966-53373B47C56A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0B0B2A87-BA47-4F58-A966-53373B47C56A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0B0B2A87-BA47-4F58-A966-53373B47C56A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E18D771-08C5-415D-B934-0C262775AA0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E18D771-08C5-415D-B934-0C262775AA0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E18D771-08C5-415D-B934-0C262775AA0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E18D771-08C5-415D-B934-0C262775AA0F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A7CB957B-E64B-4D5F-92D5-A5000783D40D} = {D0C62D98-8CB9-4236-B271-B13554A815EB}

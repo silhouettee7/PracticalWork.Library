@@ -35,5 +35,4 @@ public interface IReportRepository
     /// <param name="report">объект отчета</param>
     /// <returns>задача</returns>
     Task UpdateReport(Guid reportId,Models.Report report);
-    Task SaveReportAsync(Models.Report report, CancellationToken cancellationToken);
 }

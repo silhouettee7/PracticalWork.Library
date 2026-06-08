@@ -44,9 +44,6 @@ public sealed class Book: ICursor
     /// <summary>Проверка перевода в архив</summary>
     public bool CanBeArchived() => Status != BookStatus.Borrow;
 
-    /// <summary>Проверка выдачи на руки</summary>
-    public bool CanBeBorrowed() => !IsArchived && Status == BookStatus.Available;
-
     /// <summary>Перевод в архив</summary>
     public void Archive()
     {

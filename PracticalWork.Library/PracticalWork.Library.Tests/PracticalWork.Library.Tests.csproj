@@ -10,7 +10,10 @@
 
     <ItemGroup>
         <PackageReference Include="AutoFixture" Version="4.18.1" />
-        <PackageReference Include="coverlet.collector" Version="6.0.4"/>
+        <PackageReference Include="coverlet.collector" Version="10.0.1">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="Domain" Version="1.0.6" />
         <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.8" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1"/>
@@ -25,6 +28,9 @@
 
     <ItemGroup>
       <ProjectReference Include="..\src\PracticalWork.Library.Application\PracticalWork.Library.Application.csproj" />
+      <ProjectReference Include="..\src\PracticalWork.Library.Contracts\PracticalWork.Library.Contracts.csproj" />
+      <ProjectReference Include="..\src\PracticalWork.Library.Controllers\PracticalWork.Library.Controllers.csproj" />
+      <ProjectReference Include="..\src\PracticalWork.Library.Data.PostgreSql\PracticalWork.Library.Data.PostgreSql.csproj" />
       <ProjectReference Include="..\src\PracticalWork.Library\PracticalWork.Library.csproj" />
     </ItemGroup>
 

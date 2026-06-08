@@ -14,6 +14,7 @@ public class ConsumerService: IConsumerService
     private readonly IReportRepository _reportRepository;
     private readonly IFileStorageService _fileStorageService;
     private readonly IActivityReportGenerateService _activityReportGenerateService;
+    private readonly TimeProvider _timeProvider;
     private readonly ICacheService _cacheService;
     private readonly string _reportsCacheVersionKey;
     private readonly string _reportsBucketName;
@@ -24,9 +25,11 @@ public class ConsumerService: IConsumerService
         IFileStorageService fileStorageService,
         IActivityReportGenerateService activityReportGenerateService,
         IOptionsMonitor<MinioOptions> minioOptions,
-        IOptionsMonitor<RedisOptions> redisOptions)
+        IOptionsMonitor<RedisOptions> redisOptions,
+        TimeProvider timeProvider)
     {
         _activityReportGenerateService = activityReportGenerateService;
+        _timeProvider = timeProvider;
         _reportRepository = reportRepository;
         _activityLogRepository = activityLogRepository;
         _cacheService = cacheService;
@@ -54,7 +57,7 @@ public class ConsumerService: IConsumerService
             await _fileStorageService.UploadFileAsync(_reportsBucketName,
                 reportResult.FileName, reportResult.Content, reportResult.ContentType);
             var fileName = reportResult.FileName.Split('/')[^1];
-            report.MarkAsGenerated(fileName);
+            report.MarkAsGenerated(fileName, _timeProvider);
             await _reportRepository.UpdateReport(reportId,report);
             await _cacheService.InvalidateCache(_reportsCacheVersionKey);
         }
